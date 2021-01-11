@@ -293,7 +293,7 @@ public strictfp class RobotPlayer {
                     
                     if (!(i==0 && j==0)){
                         //MapLocation shift = new MapLocation(i,j);
-                        if (!parent.containsKey(newLocation1) && rc.canSenseLocation(newLocation1)) { //if you haven't seen this location before, and it's within the sensing radius
+                        if (!parent.containsKey(newLocation1) && rc.canSenseLocation(newLocation1) && rc.sensePassability(newLocation1) >= passabilityThreshold) { //if you haven't seen this location before, and it's within the sensing radius
                             if (!rc.isLocationOccupied(newLocation1)){
                                 parent.put(newLocation1, first); //then record the parent of this location
                                 q.add(newLocation1); //and add this to the queue
