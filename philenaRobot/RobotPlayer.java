@@ -111,6 +111,7 @@ public strictfp class RobotPlayer {
     }
 
     static void runPolitician() throws GameActionException {
+        System.out.println("I exist");
         Team enemy = rc.getTeam().opponent();
         int actionRadius = rc.getType().actionRadiusSquared;
         RobotInfo[] attackable = rc.senseNearbyRobots(actionRadius, enemy);
@@ -144,10 +145,10 @@ public strictfp class RobotPlayer {
         shiftToDirection.put(new MapLocation(-1,0), Direction.WEST);
         shiftToDirection.put(new MapLocation(-1,1), Direction.NORTHWEST);
 
-        int sensorRadius = (int) Math.sqrt(rc.getType().sensorRadiusSquared);
-        MapLocation location = new MapLocation(rc.getLocation().x + sensorRadius, rc.getLocation().y);
-        LinkedList<MapLocation> path = bfs(location);
-        System.out.println("location: " + location);
+        // int detectionRadius = (int) Math.sqrt(rc.getType().detectionRadiusSquared);
+        // MapLocation location = new MapLocation(rc.getLocation().x + detectionRadius, rc.getLocation().y);
+        LinkedList<MapLocation> path = bfs(Direction.EAST);
+        // System.out.println("location: " + location);
         System.out.println("path: " + path);
         while (path.size() !=0) {
             
@@ -157,11 +158,14 @@ public strictfp class RobotPlayer {
                 System.out.println("empowered");
                 return;
             }
-            MapLocation shift = new MapLocation(path.getFirst().x - rc.getLocation().x, path.getFirst().y - rc.getLocation().y);
             
-            Direction nextStep = shiftToDirection.get(shift);
-            System.out.println("next step: " + nextStep);
-            if (tryMove(nextStep)){
+            // MapLocation shift = new MapLocation(path.getFirst().x - rc.getLocation().x, path.getFirst().y - rc.getLocation().y);
+
+            Direction shift = rc.getLocation().directionTo(path.getFirst());
+            
+            // Direction nextStep = shiftToDirection.get(shift);
+            // System.out.println("next step: " + nextStep);
+            if (tryMove(shift)){
                 System.out.println("I moved!");
                 path.removeFirst();
             }
@@ -269,11 +273,19 @@ public strictfp class RobotPlayer {
         }
         return actualLocation;
     }
+
     static double passabilityThreshold = 0.3;
     
-    static LinkedList bfs(MapLocation location) throws GameActionException{
+    static LinkedList bfs(Direction direction) throws GameActionException{
         //so far it wont work if passability threshold is too high, like if you can never get to location unless u go through a cell with lower passability 
+
         MapLocation center = rc.getLocation();
+
+        MapLocation location = center;
+        while (rc.canDetectLocation(location)) {
+            location = location.add(direction);
+        }
+        location = location.subtract(direction);
         
         //init queue + parent hashmap (which serves as "seen")
         LinkedList<MapLocation> q = new LinkedList<MapLocation>();
@@ -283,31 +295,16 @@ public strictfp class RobotPlayer {
         parent.put(center, center);
         q.add(center);
 
-        int[] adj = new int[]{-1,0,1};
-
-        while (q.size() !=0) {
+        while (q.size() != 0) {
             MapLocation first = q.getFirst();
-            for (int i: adj) {
-                for (int j: adj){
-                    MapLocation newLocation1 = new MapLocation(first.x + i, first.y + j);
-                    
-                    if (!(i==0 && j==0)){
-                        //MapLocation shift = new MapLocation(i,j);
-                        if (!parent.containsKey(newLocation1) && rc.canSenseLocation(newLocation1) && rc.sensePassability(newLocation1) >= passabilityThreshold) { //if you haven't seen this location before, and it's within the sensing radius
-                            if (!rc.isLocationOccupied(newLocation1)){
-                                parent.put(newLocation1, first); //then record the parent of this location
-                                q.add(newLocation1); //and add this to the queue
-                            }
+            for (Direction dir: directions) {
+                MapLocation newLocation = first.add(dir);
+                if (!parent.containsKey(newLocation) && rc.canDetectLocation(newLocation) && rc.sensePassability(newLocation) >= passabilityThreshold) {
+                    if (!rc.isLocationOccupied(newLocation)) {
+                        parent.put(newLocation, first);
+                        q.add(newLocation);
                     }
-                    }
-                    
-                    /* MapLocation newLocation2 = new MapLocation(first.x, first.y + i );
-                    if (!parent.containsKey(newLocation2) && rc.canSenseLocation(newLocation2) && rc.sensePassability(newLocation2) >= passabilityThreshold) { //if you haven't seen this location before, and it's within the sensing radius
-                        parent.put(newLocation2, first); //then record the parent of this location
-                        q.add(newLocation2); //and add this to the queue
-                    } */
-    
-                    if (newLocation1.equals(location)) { //if we reach the location, break
+                    if (newLocation.equals(location)) {
                         break;
                     }
                 }
@@ -315,18 +312,60 @@ public strictfp class RobotPlayer {
             q.removeFirst();
         }
 
-        if (!parent.containsKey(location)){
-
-        }
-
         LinkedList<MapLocation> path = new LinkedList<MapLocation>();
         MapLocation prev = location;
         while (!prev.equals(center)){
             path.addFirst(prev);
+            System.out.println(prev);
             prev = parent.get(prev);
         }
         //a linked list with the location after center, ..., location
         return path;
+
+        // int[] adj = new int[]{-1,0,1};
+
+        // while (q.size() !=0) {
+        //     MapLocation first = q.getFirst();
+        //     for (int i: adj) {
+        //         for (int j: adj){
+        //             MapLocation newLocation1 = new MapLocation(first.x + i, first.y + j);
+                    
+        //             if (!(i==0 && j==0)){
+        //                 //MapLocation shift = new MapLocation(i,j);
+        //                 if (!parent.containsKey(newLocation1) && rc.canSenseLocation(newLocation1) && rc.sensePassability(newLocation1) >= passabilityThreshold) { //if you haven't seen this location before, and it's within the sensing radius
+        //                     if (!rc.isLocationOccupied(newLocation1)){
+        //                         parent.put(newLocation1, first); //then record the parent of this location
+        //                         q.add(newLocation1); //and add this to the queue
+        //                     }
+        //             }
+        //             }
+                    
+        //             /* MapLocation newLocation2 = new MapLocation(first.x, first.y + i );
+        //             if (!parent.containsKey(newLocation2) && rc.canSenseLocation(newLocation2) && rc.sensePassability(newLocation2) >= passabilityThreshold) { //if you haven't seen this location before, and it's within the sensing radius
+        //                 parent.put(newLocation2, first); //then record the parent of this location
+        //                 q.add(newLocation2); //and add this to the queue
+        //             } */
+    
+        //             if (newLocation1.equals(location)) { //if we reach the location, break
+        //                 break;
+        //             }
+        //         }
+        //     }
+        //     q.removeFirst();
+        // }
+
+        // if (!parent.containsKey(location)){
+
+        // }
+
+        // LinkedList<MapLocation> path = new LinkedList<MapLocation>();
+        // MapLocation prev = location;
+        // while (!prev.equals(center)){
+        //     path.addFirst(prev);
+        //     prev = parent.get(prev);
+        // }
+        // //a linked list with the location after center, ..., location
+        // return path;
         
         
 
