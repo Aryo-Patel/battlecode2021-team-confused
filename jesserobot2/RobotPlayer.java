@@ -270,7 +270,7 @@ public strictfp class RobotPlayer {
 
     static void runEnlightenmentCenter() throws GameActionException {
         RobotType toBuild = RobotType.POLITICIAN;
-        int influence = 20;
+        int influence = rc.getInfluence()/10;
         for (Direction dir : directions) {
             if (rc.canBuildRobot(toBuild, dir, influence)) {
                 rc.buildRobot(toBuild, dir, influence);
@@ -285,6 +285,7 @@ public strictfp class RobotPlayer {
                     rc.setFlag(rc.getFlag(robot));
                     break;
                 }
+                sendLocation(primeTeam, rc.getLocation());
             } catch (Exception e) {
                 
             }
@@ -304,7 +305,7 @@ public strictfp class RobotPlayer {
     static void runPolitician() throws GameActionException {
         Team enemy = rc.getTeam().opponent();
         int actionRadius = rc.getType().actionRadiusSquared;
-        RobotInfo[] attackable = rc.senseNearbyRobots(actionRadius, enemy);
+        RobotInfo[] affectable = rc.senseNearbyRobots(actionRadius);
 
         if (ecID == 0) {
             RobotInfo[] nearbyRobots = rc.senseNearbyRobots(rc.getLocation(), 1, rc.getTeam());
@@ -317,11 +318,20 @@ public strictfp class RobotPlayer {
         // sendLocation();
         // System.out.println(getVisibleLocations());
 
+        RobotInfo[] robotList = rc.senseNearbyRobots();
+
         if (rc.getFlag(ecID) / 128 / 128 == primeCenter) {
-            System.out.println(decodeLocation(rc.getFlag(ecID)));
+            // System.out.println(decodeLocation(rc.getFlag(ecID)));
             moveInDirection(rc.getLocation().directionTo(decodeLocation(rc.getFlag(ecID))));
+            for (RobotInfo robot : robotList) {
+                if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() != rc.getTeam()) {
+                    sendLocation(primeCenter, robot.getLocation());
+                    tryMove(rc.getLocation().directionTo(robot.getLocation()));
+                    break;
+                }
+                sendLocation(primeTeam, rc.getLocation());
+            }
         } else {
-            RobotInfo[] robotList = rc.senseNearbyRobots();
             for (RobotInfo robot : robotList) {
                 if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() != rc.getTeam()) {
                     sendLocation(primeCenter, robot.getLocation());
@@ -331,6 +341,14 @@ public strictfp class RobotPlayer {
                 sendLocation(primeTeam, rc.getLocation());
             }
             tryMove(randomDirection());
+        }
+
+        if (affectable.length != 0 && rc.canEmpower(actionRadius)) {
+            for (RobotInfo robot : affectable) {
+                if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() != rc.getTeam()) {
+                    rc.empower(actionRadius);
+                }
+            }
         }
 
         // if (attackable.length != 0 && rc.canEmpower(actionRadius)) {
