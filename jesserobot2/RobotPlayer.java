@@ -225,7 +225,15 @@ public strictfp class RobotPlayer {
                 rc.move(bestDirection);
             }
         }
+    }
 
+    static boolean isOnTeam(RobotInfo robot) throws GameActionException {
+        extraInfo = rc.getFlag(robot.getID());
+        if (extraInfo == primeCenter || extraInfo == primeTeam) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
 
@@ -290,16 +298,6 @@ public strictfp class RobotPlayer {
                 
             }
         }
-        // RobotInfo[] nearbyRobots = rc.senseNearbyRobots();
-        // // RobotInfo[] nearbyRobots = rc.senseNearbyRobots();
-        // int[] robotFlags = new int[nearbyRobots.length];
-        // // int[] robotIDs = new int[];
-        // int i = 0;
-        // for (RobotInfo robot : nearbyRobots) {
-        //     robotFlags[i] = rc.getFlag(robot.getID());
-        //     i++;
-        // }
-        // System.out.println(Arrays.toString(robotFlags));
     }
 
     static void runPolitician() throws GameActionException {
@@ -315,13 +313,10 @@ public strictfp class RobotPlayer {
                 }
             }
         }
-        // sendLocation();
-        // System.out.println(getVisibleLocations());
 
         RobotInfo[] robotList = rc.senseNearbyRobots();
 
         if (rc.getFlag(ecID) / 128 / 128 == primeCenter) {
-            // System.out.println(decodeLocation(rc.getFlag(ecID)));
             moveInDirection(rc.getLocation().directionTo(decodeLocation(rc.getFlag(ecID))));
             for (RobotInfo robot : robotList) {
                 if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() != rc.getTeam()) {
@@ -350,15 +345,6 @@ public strictfp class RobotPlayer {
                 }
             }
         }
-
-        // if (attackable.length != 0 && rc.canEmpower(actionRadius)) {
-        //     System.out.println("empowering...");
-        //     rc.empower(actionRadius);
-        //     System.out.println("empowered");
-        //     return;
-        // }
-        // if (tryMove(randomDirection()))
-        //     System.out.println("I moved!");
     }
 
     static void runSlanderer() throws GameActionException {
