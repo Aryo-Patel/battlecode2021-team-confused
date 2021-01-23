@@ -228,15 +228,13 @@ public strictfp class RobotPlayer {
     }
 
     static boolean isOnTeam(RobotInfo robot) throws GameActionException {
-        extraInfo = rc.getFlag(robot.getID());
+        int extraInfo = rc.getFlag(robot.getID());
         if (extraInfo == primeCenter || extraInfo == primeTeam) {
             return true;
         } else {
             return false;
         }
     }
-
-
 
     /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
