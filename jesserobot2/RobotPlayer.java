@@ -76,27 +76,6 @@ public strictfp class RobotPlayer {
         return actualLocation;
     }
 
-    static boolean tryStandardMove() throws GameActionException {
-        if (rc.canMove(standardDirection)) {
-            rc.move(standardDirection);
-            return true;
-        } else if (rc.canMove(standardDirection.rotateRight().rotateRight())) {
-            rc.move(standardDirection.rotateRight().rotateRight());
-            standardDirection = standardDirection.rotateRight().rotateRight();
-            return true;
-        } else if (rc.canMove(standardDirection.rotateLeft().rotateLeft())) {
-            rc.move(standardDirection.rotateLeft().rotateLeft());
-            standardDirection = standardDirection.rotateLeft().rotateLeft();
-            return true;
-        } else if (rc.canMove(standardDirection.opposite().rotateLeft())) {
-            rc.move(standardDirection.opposite().rotateLeft());
-            standardDirection = standardDirection.opposite().rotateLeft();
-            return true;
-        } else {
-            return false;
-        }
-    }
-
     static ArrayList<MapLocation> getVisibleLocations() throws GameActionException {
         ArrayList<MapLocation> visibleLocations = new ArrayList<MapLocation>();
         MapLocation center = rc.getLocation();
@@ -224,6 +203,23 @@ public strictfp class RobotPlayer {
             }
         }
 
+    }
+
+    static boolean tryStandardMove() throws GameActionException {
+        if (tryMoveInDirection(standardDirection)) {
+            return true;
+        } else if (tryMoveInDirection(standardDirection.rotateRight().rotateRight())) {
+            standardDirection = standardDirection.rotateRight().rotateRight();
+            return true;
+        } else if (tryMoveInDirection(standardDirection.rotateLeft().rotateLeft())) {
+            standardDirection = standardDirection.rotateLeft().rotateLeft();
+            return true;
+        } else if (tryMoveInDirection(standardDirection.opposite().rotateLeft())) {
+            standardDirection = standardDirection.opposite().rotateLeft();
+            return true;
+        } else {
+            return false;
+        }
     }
 
     static void moveTowards(MapLocation target) throws GameActionException {
