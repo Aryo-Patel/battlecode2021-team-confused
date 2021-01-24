@@ -59,8 +59,8 @@ public strictfp class RobotPlayer {
 
     static ArrayList<Integer> spawnedRobots = new ArrayList<Integer>();
 
-    static TreeMap<MapLocation, Integer> enemyECs = new TreeMap<MapLocation, Integer>();
-    static TreeMap<MapLocation, Integer> neutralECs = new TreeMap<MapLocation, Integer>();
+    static HashMap<MapLocation, Integer> enemyECs = new HashMap<MapLocation, Integer>();
+    static HashMap<MapLocation, Integer> neutralECs = new HashMap<MapLocation, Integer>();
 
     static int log2(int N) {
         return (int) (Math.log(N) / Math.log(2));
@@ -223,7 +223,7 @@ public strictfp class RobotPlayer {
         System.out.println(rc.getRoundNum());
         RobotType[] spawnOrder = {RobotType.SLANDERER, RobotType.MUCKRAKER, RobotType.MUCKRAKER, RobotType.POLITICIAN};
         RobotType toBuild = spawnOrder[((rc.getRoundNum() - 1)/2) % 4];
-        int[] spawnInfluence = {rc.getInfluence()/12, rc.getInfluence()/24, rc.getInfluence()/24, rc.getInfluence()/8};
+        int[] spawnInfluence = {rc.getInfluence()/24, rc.getInfluence()/36, rc.getInfluence()/24, rc.getInfluence()/8};
         int influence = spawnInfluence[((rc.getRoundNum() - 1)/2) % 4];
         for (int i = 0; i < 8; i++) {
             Direction dir = directions[(((rc.getRoundNum() - 1)/2%8) + i)%8];
@@ -252,9 +252,9 @@ public strictfp class RobotPlayer {
                     }
                 } else if (rc.getFlag(robot) / 128 / 128 / 32 == neutralEC) {
                     if (neutralECs.containsKey(decodeLocation(rc.getFlag(robot)))) {
-                        neutralECs.replace(decodeLocation(rc.getFlag(robot))), (rc.getFlag(robot) / 128 / 128)%32)
+                        neutralECs.replace(decodeLocation(rc.getFlag(robot)), (rc.getFlag(robot) / 128 / 128)%32);
                     } else {
-                        neutralECs.put(decodeLocation(rc.getFlag(robot)), (rc.getFlag(robot) / 128 / 128)%32)
+                        neutralECs.put(decodeLocation(rc.getFlag(robot)), (rc.getFlag(robot) / 128 / 128)%32);
                     }
                 }
             }
@@ -306,7 +306,6 @@ public strictfp class RobotPlayer {
         if (rc.canBid(bidAmount)) {
             rc.bid(bidAmount);
         }
-        System.out.println(enemyECs);
     }
 
     static void runPolitician() throws GameActionException {
@@ -349,7 +348,7 @@ public strictfp class RobotPlayer {
             }
         }
 
-        if (lastECFlag / 128 / 128 / 32 == enemyEC) {
+        if (lastECFlag / 128 / 128 / 32 == neutralEC) {
             tryMoveInDirection(rc.getLocation().directionTo(decodeLocation(lastECFlag)));
         }
         for (RobotInfo robot : nearbyRobots) {
@@ -404,12 +403,12 @@ public strictfp class RobotPlayer {
             }
         }
 
+
         if (tryStandardMove())
             System.out.println("I moved!");
     }
 
     static void runMuckraker() throws GameActionException {
-        System.out.println(rc.getRoundNum());
         Team enemy = rc.getTeam().opponent();
         RobotInfo[] nearbyRobots = rc.senseNearbyRobots();
         if (ecID == 0) {
@@ -440,6 +439,8 @@ public strictfp class RobotPlayer {
                 }
             }
         }
+
+        System.out.println(lastECFlag);
 
         if (lastECFlag / 128 / 128 / 32 == enemyEC) {
             tryMoveInDirection(rc.getLocation().directionTo(decodeLocation(lastECFlag)));
