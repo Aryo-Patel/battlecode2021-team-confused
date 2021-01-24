@@ -217,13 +217,13 @@ public strictfp class RobotPlayer {
     }
 
     static void runEnlightenmentCenter() throws GameActionException {
-        System.out.println(turnCount);
+        System.out.println(rc.getRoundNum());
         RobotType[] spawnOrder = {RobotType.SLANDERER, RobotType.MUCKRAKER, RobotType.MUCKRAKER, RobotType.POLITICIAN};
-        RobotType toBuild = spawnOrder[((turnCount - 1)/2) % 4];
+        RobotType toBuild = spawnOrder[((rc.getRoundNum() - 1)/2) % 4];
         int[] spawnInfluence = {rc.getInfluence()/12, rc.getInfluence()/24, rc.getInfluence()/24, rc.getInfluence()/8};
-        int influence = spawnInfluence[((turnCount - 1)/2) % 4];
+        int influence = spawnInfluence[((rc.getRoundNum() - 1)/2) % 4];
         for (int i = 0; i < 8; i++) {
-            Direction dir = directions[(((turnCount - 1)/2%8) + i)%8];
+            Direction dir = directions[(((rc.getRoundNum() - 1)/2%8) + i)%8];
             if (rc.canBuildRobot(toBuild, dir, influence)) {
                 rc.buildRobot(toBuild, dir, influence);
                 spawnedRobots.add(rc.senseRobotAtLocation(rc.getLocation().add(dir)).getID());
@@ -250,7 +250,7 @@ public strictfp class RobotPlayer {
             }
         }
         int mod8Turn = rc.getRoundNum() % 8;
-        if (mod8Turn == 3 || mod8Turn == 4 || mod8Turn == 5 || mod8Turn == 6) {
+        if (mod8Turn == 7 || mod8Turn == 0) {
             if (queueEC.size() > 0) {
                 for (MapLocation ec : queueEC.keySet()) {
                     if (queueEC.get(ec) == 31) {
@@ -262,7 +262,7 @@ public strictfp class RobotPlayer {
             } else {
                 sendLocation(teamID, enlightenmentCenterID, rc.getLocation());
             }
-        } else if (mod8Turn == 7 || mod8Turn == 0) {
+        } else if (mod8Turn == 3 || mod8Turn == 4 || mod8Turn == 5 || mod8Turn == 6) {
             if (queueEC.size() > 0) {
                 int minConviction = 31;
                 MapLocation minLocation = null;
@@ -355,7 +355,6 @@ public strictfp class RobotPlayer {
                         break;
                     } else if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == enemy) {
                         sendLocation(enemyEC, log2(robot.getConviction()), robot.getLocation());
-                        tryMoveInDirection(rc.getLocation().directionTo(robot.getLocation()));
                         break;
                     } else if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == rc.getTeam()) {
                         sendLocation(ownEC, log2(robot.getConviction()), robot.getLocation());
@@ -409,7 +408,7 @@ public strictfp class RobotPlayer {
     }
 
     static void runMuckraker() throws GameActionException {
-        System.out.println(turnCount);
+        System.out.println(rc.getRoundNum());
         Team enemy = rc.getTeam().opponent();
         RobotInfo[] nearbyRobots = rc.senseNearbyRobots();
         if (ecID == 0) {
@@ -465,7 +464,6 @@ public strictfp class RobotPlayer {
                     break;
                 } else if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == Team.NEUTRAL) {
                     sendLocation(enemyEC, 31, robot.getLocation());
-                    tryMoveInDirection(rc.getLocation().directionTo(robot.getLocation()));
                     break;
                 } else if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == rc.getTeam()) {
                     sendLocation(ownEC, log2(robot.getConviction()), robot.getLocation());
