@@ -55,6 +55,8 @@ public strictfp class RobotPlayer {
 
     static int lastECFlag = 0;
 
+    static String type = null;
+
     static Direction standardDirection;
 
     static ArrayList<Integer> spawnedRobots = new ArrayList<Integer>();
@@ -409,7 +411,7 @@ public strictfp class RobotPlayer {
         for (RobotInfo robot : nearbyRobots) {
             if (robot.getType() == RobotType.MUCKRAKER && robot.getTeam() == enemy) {
                 if (shortestDistance(rc.getLocation(), robot.getLocation()) < nearestDistance) {
-                    nearestDistance = shortestDistance(rc.getLocation(), robot.getLocation();
+                    nearestDistance = shortestDistance(rc.getLocation(), robot.getLocation());
                     nearestEnemyMuckraker = robot;
                 }
             }
@@ -431,6 +433,9 @@ public strictfp class RobotPlayer {
                 if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
                     ecID = robot.getID();
                     standardDirection = rc.getLocation().directionTo(robot.getLocation()).opposite();
+                    if (rc.getRoundNum() % 8 == 4) {
+                        type = "muckraker-random";
+                    }
                 }
             }
         }
@@ -456,6 +461,10 @@ public strictfp class RobotPlayer {
         }
 
         System.out.println(lastECFlag);
+
+        if (type == "muckraker-random") {
+            tryMove(randomDirection());
+        }
 
         if (lastECFlag / 128 / 128 / 32 == enemyEC) {
             tryMoveInDirection(rc.getLocation().directionTo(decodeLocation(lastECFlag)));
