@@ -249,18 +249,33 @@ public strictfp class RobotPlayer {
                 
             }
         }
-        if (queueEC.size() > 0) {
-            int minConviction = 31;
-            MapLocation minLocation = null;
-            for (MapLocation ec : queueEC.keySet()) {
-                if (queueEC.get(ec) < minConviction) {
-                    minConviction = queueEC.get(ec);
-                    minLocation = ec;
+        int mod8Turn = turnCount % 8;
+        if (mod8Turn == 3 || mod8Turn == 4 || mod8Turn == 5 || mod8Turn == 6) {
+            if (queueEC.size() > 0) {
+                for (MapLocation ec : queueEC.keySet()) {
+                    if (queueEC.get(ec) == 31) {
+                        sendLocation(enemyEC, 31, ec);
+                        break;
+                    }
+                    sendLocation(teamID, enlightenmentCenterID, rc.getLocation());
                 }
+            } else {
+                sendLocation(teamID, enlightenmentCenterID, rc.getLocation());
             }
-            sendLocation(enemyEC, minConviction, minLocation);
-        } else {
-            sendLocation(teamID, enlightenmentCenterID, rc.getLocation());
+        } else if (mod8Turn == 7 || mod8Turn == 0) {
+            if (queueEC.size() > 0) {
+                int minConviction = 31;
+                MapLocation minLocation = null;
+                for (MapLocation ec : queueEC.keySet()) {
+                    if (queueEC.get(ec) < minConviction) {
+                        minConviction = queueEC.get(ec);
+                        minLocation = ec;
+                    }
+                }
+                sendLocation(enemyEC, minConviction, minLocation);
+            } else {
+                sendLocation(teamID, enlightenmentCenterID, rc.getLocation());
+            }
         }
         int bidAmount = (int) Math.floor(rc.getInfluence()/48);
         if (rc.canBid(bidAmount)) {
