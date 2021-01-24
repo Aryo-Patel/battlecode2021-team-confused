@@ -285,6 +285,10 @@ public strictfp class RobotPlayer {
             }
         }
 
+        if (turnCount % 16 == 1 || turnCount % 16 == 2) {
+            lastECFlag = rc.getFlag(ecID);
+        }
+
         if (affectable.length != 0 && rc.canEmpower(actionRadius)) {
             int damageDone = (int) Math.floor((rc.getConviction() - GameConstants.EMPOWER_TAX) / affectable.length);
             int killableUnits = 0;
@@ -355,6 +359,10 @@ public strictfp class RobotPlayer {
             }
         }
 
+        if (turnCount % 16 == 1 || turnCount % 16 == 2) {
+            lastECFlag = rc.getFlag(ecID);
+        }
+
         for (RobotInfo robot : nearbyRobots) {
             if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == enemy) {
                 sendLocation(enemyEC, log2(robot.getConviction()), robot.getLocation());
@@ -385,6 +393,10 @@ public strictfp class RobotPlayer {
                     standardDirection = rc.getLocation().directionTo(robot.getLocation()).opposite();
                 }
             }
+        }
+
+        if (turnCount % 16 == 1 || turnCount % 16 == 2) {
+            lastECFlag = rc.getFlag(ecID);
         }
 
         for (RobotInfo robot : nearbyRobots) {
