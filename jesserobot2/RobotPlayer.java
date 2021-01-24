@@ -346,6 +346,8 @@ public strictfp class RobotPlayer {
                 if (rc.getFlag(robot) / 128 / 128 / 32 == ownEC) {
                     if (queueEC.containsKey(decodeLocation(rc.getFlag(robot)))) {
                         queueEC.remove(decodeLocation(rc.getFlag(robot)));
+                    } else {
+
                     }
                 } else if (rc.getFlag(robot) / 128 / 128 / 32 == enemyEC) {
                     if (queueEC.containsKey(decodeLocation(rc.getFlag(robot)))) {
@@ -359,7 +361,8 @@ public strictfp class RobotPlayer {
             }
         }
         if (queueEC.size() > 0) {
-            sendLocation(enemyEC, 0, queueEC.firstKey());
+            Map.Entry<MapLocation, Double> firstEC = queueEC.firstEntry();
+            sendLocation(enemyEC, firstEC.getValue(), firstEC.getKey());
         } else {
             sendLocation(teamID, enlightenmentCenterID, rc.getLocation());
         }
