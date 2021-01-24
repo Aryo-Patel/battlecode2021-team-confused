@@ -205,6 +205,13 @@ public strictfp class RobotPlayer {
                 rc.move(bestDirection);
                 return true;
             }
+        } else {
+            for (Direction alt: directions) {
+                if (rc.canMove(alt)) {
+                    rc.move(alt);
+                    break;
+                }
+            }
         }
         return false;
 
