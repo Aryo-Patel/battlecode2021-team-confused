@@ -276,10 +276,14 @@ public strictfp class RobotPlayer {
 
     static void runEnlightenmentCenter() throws GameActionException {
         RobotType[] spawnOrder = {RobotType.SLANDERER, RobotType.MUCKRAKER, RobotType.MUCKRAKER, RobotType.POLITICIAN};
-        RobotType toBuild = spawnOrder[turnCount % 4];
+        RobotType toBuild = spawnOrder[((turnCount - 1)/2) % 4];
         int influence = rc.getInfluence()/10;
-        for (int i = turnCount % 8; i < 8 + turnCount % 8; i++) {
-            Direction dir = directions[i%8];
+        for (int i = 0; i < 8; i++) {
+            Direction dir = directions[(((turnCount - 1)/2%8) + i)%8];
+            System.out.println(toBuild);
+            System.out.println(dir);
+            System.out.println(influence);
+            System.out.println(rc.canBuildRobot(toBuild, dir, influence));
             if (rc.canBuildRobot(toBuild, dir, influence)) {
                 rc.buildRobot(toBuild, dir, influence);
                 spawnedRobots.add(rc.senseRobotAtLocation(rc.getLocation().add(dir)).getID());
@@ -350,6 +354,7 @@ public strictfp class RobotPlayer {
     }
 
     static void runSlanderer() throws GameActionException {
+        RobotInfo[] nearbyRobots = rc.senseNearbyRobots();
         if (ecID == 0) {
             for (RobotInfo robot : nearbyRobots) {
                 if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
@@ -363,6 +368,7 @@ public strictfp class RobotPlayer {
     }
 
     static void runMuckraker() throws GameActionException {
+        RobotInfo[] nearbyRobots = rc.senseNearbyRobots();
         if (ecID == 0) {
             for (RobotInfo robot : nearbyRobots) {
                 if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
@@ -370,7 +376,7 @@ public strictfp class RobotPlayer {
                 }
             }
         }
-        
+
         Team enemy = rc.getTeam().opponent();
         int actionRadius = rc.getType().actionRadiusSquared;
         for (RobotInfo robot : rc.senseNearbyRobots(actionRadius, enemy)) {
