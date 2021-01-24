@@ -35,6 +35,8 @@ public strictfp class RobotPlayer {
     static int primeCenter = 1021;
     static int ecID = 0;
 
+    static Direction standardDirection;
+
     static ArrayList<Integer> spawnedRobots = new ArrayList<Integer>();
 
     static void sendLocation(int extraInfo, MapLocation location) throws GameActionException {
@@ -314,6 +316,7 @@ public strictfp class RobotPlayer {
             for (RobotInfo robot : nearbyRobots) {
                 if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
                     ecID = robot.getID();
+                    standardDirection = rc.getLocation().directionTo(robot.getLocation()).opposite();
                 }
             }
         }
@@ -359,6 +362,7 @@ public strictfp class RobotPlayer {
             for (RobotInfo robot : nearbyRobots) {
                 if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
                     ecID = robot.getID();
+                    standardDirection = rc.getLocation().directionTo(robot.getLocation()).opposite();
                 }
             }
         }
@@ -373,6 +377,7 @@ public strictfp class RobotPlayer {
             for (RobotInfo robot : nearbyRobots) {
                 if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
                     ecID = robot.getID();
+                    standardDirection = rc.getLocation().directionTo(robot.getLocation()).opposite();
                 }
             }
         }
