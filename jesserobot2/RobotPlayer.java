@@ -76,6 +76,24 @@ public strictfp class RobotPlayer {
         return actualLocation;
     }
 
+    static boolean tryStandardMove() throws GameActionException {
+        if (rc.canMove(standardDirection)) {
+            rc.move(standardDirection);
+            return true;
+        } else if (rc.canMove(standardDirection.rotateRight().rotateRight())) {
+            rc.move(standardDirection.rotateRight().rotateRight());
+            return true;
+        } else if (rc.canMove(standardDirection.rotateLeft().rotateLeft())) {
+            rc.move(standardDirection.rotateLeft().rotateLeft());
+            return true;
+        } else if (rc.canMove(standardDirection.opposite().rotateLeft())) {
+            rc.move(standardDirection.opposite().rotateLeft());
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     static ArrayList<MapLocation> getVisibleLocations() throws GameActionException {
         ArrayList<MapLocation> visibleLocations = new ArrayList<MapLocation>();
         MapLocation center = rc.getLocation();
@@ -282,10 +300,6 @@ public strictfp class RobotPlayer {
         int influence = rc.getInfluence()/10;
         for (int i = 0; i < 8; i++) {
             Direction dir = directions[(((turnCount - 1)/2%8) + i)%8];
-            System.out.println(toBuild);
-            System.out.println(dir);
-            System.out.println(influence);
-            System.out.println(rc.canBuildRobot(toBuild, dir, influence));
             if (rc.canBuildRobot(toBuild, dir, influence)) {
                 rc.buildRobot(toBuild, dir, influence);
                 spawnedRobots.add(rc.senseRobotAtLocation(rc.getLocation().add(dir)).getID());
