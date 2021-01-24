@@ -403,6 +403,21 @@ public strictfp class RobotPlayer {
             }
         }
 
+        RobotInfo nearestEnemyMuckraker = null;
+        int nearestDistance = 10;
+
+        for (RobotInfo robot : nearbyRobots) {
+            if (robot.getType() == RobotType.MUCKRAKER && robot.getTeam() == enemy) {
+                if (shortestDistance(rc.getLocation(), robot.getLocation()) < nearestDistance) {
+                    nearestDistance = shortestDistance(rc.getLocation(), robot.getLocation();
+                    nearestEnemyMuckraker = robot;
+                }
+            }
+        }
+
+        if (nearestEnemyMuckraker != null) {
+            standardDirection = rc.getLocation().directionTo(nearestEnemyMuckraker.getLocation()).opposite();
+        }
 
         if (tryStandardMove())
             System.out.println("I moved!");
