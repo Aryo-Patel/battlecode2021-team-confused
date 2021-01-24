@@ -141,7 +141,7 @@ public strictfp class RobotPlayer {
         return Math.min(offsetX, offsetY);
     }
 
-    static void tryMoveInDirection(Direction dir) throws GameActionException {
+    static boolean tryMoveInDirection(Direction dir) throws GameActionException {
         // double expectedTurnWait = getExpectedTurnWait();
         // System.out.println(Clock.getBytecodeNum());
         // MapLocation center = rc.getLocation();
@@ -175,49 +175,59 @@ public strictfp class RobotPlayer {
 
         if (rc.canMove(dir)) {
             if ( 1.0/rc.sensePassability(center.add(dir)) < MinTurns ) {
-                MinTurns = 1.0/rc.sensePassability(center.add(dir));
+                MinTurns = Math.floor(1.0/rc.sensePassability(center.add(dir)));
+                System.out.println(MinTurns);
                 bestDirection = dir;
             }
         }
 
         if (rc.canMove(dir.rotateLeft())) {
             if ( 1.0/rc.sensePassability(center.add(dir.rotateLeft())) < MinTurns ) {
-                MinTurns = 1.0/rc.sensePassability(center.add(dir.rotateLeft()));
+                MinTurns = Math.floor(1.0/rc.sensePassability(center.add(dir.rotateLeft())));
+                System.out.println(MinTurns);
                 bestDirection = dir.rotateLeft();
             }
         }
 
         if (rc.canMove(dir.rotateRight())) {
             if ( 1.0/rc.sensePassability(center.add(dir.rotateRight())) < MinTurns ) {
-                MinTurns = 1.0/rc.sensePassability(center.add(dir.rotateRight()));
+                MinTurns = Math.floor(1.0/rc.sensePassability(center.add(dir.rotateRight())));
+                System.out.println(MinTurns);
                 bestDirection = dir.rotateRight();
             }
         }
 
         if (bestDirection != null) {
+            System.out.println(dir);
+            System.out.println("best direction");
+            System.out.println(bestDirection);
             if (rc.canMove(bestDirection)) {
                 rc.move(bestDirection);
                 return true;
-            } else {
-                return false;
             }
         }
+        return false;
 
     }
 
     static boolean tryStandardMove() throws GameActionException {
         if (tryMoveInDirection(standardDirection)) {
+            System.out.println(standardDirection);
             return true;
         } else if (tryMoveInDirection(standardDirection.rotateRight().rotateRight())) {
             standardDirection = standardDirection.rotateRight().rotateRight();
+            System.out.println(standardDirection);
             return true;
         } else if (tryMoveInDirection(standardDirection.rotateLeft().rotateLeft())) {
             standardDirection = standardDirection.rotateLeft().rotateLeft();
+            System.out.println(standardDirection);
             return true;
         } else if (tryMoveInDirection(standardDirection.opposite().rotateLeft())) {
             standardDirection = standardDirection.opposite().rotateLeft();
+            System.out.println(standardDirection);
             return true;
         } else {
+            System.out.println("couldn't move");
             return false;
         }
     }
