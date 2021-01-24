@@ -231,7 +231,7 @@ public strictfp class RobotPlayer {
             }
         }
         for (int robot : spawnedRobots) {
-            try {
+            if (rc.canGetFlag(robot)) {
                 if (rc.getFlag(robot) / 128 / 128 / 32 == ownEC) {
                     if (queueEC.containsKey(decodeLocation(rc.getFlag(robot)))) {
                         queueEC.remove(decodeLocation(rc.getFlag(robot)));
@@ -245,10 +245,9 @@ public strictfp class RobotPlayer {
                         queueEC.put(decodeLocation(rc.getFlag(robot)), (rc.getFlag(robot) / 128 / 128)%32);
                     }
                 }
-            } catch (Exception e) {
-                
             }
         }
+
         int mod8Turn = rc.getRoundNum() % 8;
         if (mod8Turn == 7 || mod8Turn == 0) {
             if (queueEC.size() > 0) {
@@ -283,6 +282,7 @@ public strictfp class RobotPlayer {
         } else if (mod8Turn == 1 || mod8Turn == 2) {
             sendLocation(teamID, enlightenmentCenterID, rc.getLocation());
         }
+
         int bidAmount = (int) Math.floor(rc.getInfluence()/48);
         if (rc.canBid(bidAmount)) {
             rc.bid(bidAmount);
@@ -330,43 +330,24 @@ public strictfp class RobotPlayer {
             }
         }
 
-        try {
-            if (lastECFlag == enemyEC) {
-                tryMoveInDirection(rc.getLocation().directionTo(decodeLocation(lastECFlag)));
-                for (RobotInfo robot : nearbyRobots) {
-                    if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == Team.NEUTRAL) {
-                        sendLocation(enemyEC, 31, robot.getLocation());
-                        break;
-                    } else if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == enemy) {
-                        sendLocation(enemyEC, log2(robot.getConviction()), robot.getLocation());
-                        break;
-                    } else if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == rc.getTeam()) {
-                        sendLocation(ownEC, log2(robot.getConviction()), robot.getLocation());
-                        break;
-                    } else {
-                        sendLocation(teamID, politicianID, rc.getLocation());
-                    }
-                }
-            } else {
-                for (RobotInfo robot : nearbyRobots) {
-                    if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == Team.NEUTRAL) {
-                        sendLocation(enemyEC, 31, robot.getLocation());
-                        tryMoveInDirection(rc.getLocation().directionTo(robot.getLocation()));
-                        break;
-                    } else if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == enemy) {
-                        sendLocation(enemyEC, log2(robot.getConviction()), robot.getLocation());
-                        break;
-                    } else if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == rc.getTeam()) {
-                        sendLocation(ownEC, log2(robot.getConviction()), robot.getLocation());
-                        break;
-                    }
-                    sendLocation(teamID, politicianID, rc.getLocation());
-                }
-                tryStandardMove();
-            }
-        } catch (Exception e) {
-
+        if (lastECFlag == enemyEC) {
+            tryMoveInDirection(rc.getLocation().directionTo(decodeLocation(lastECFlag)));
         }
+        for (RobotInfo robot : nearbyRobots) {
+            if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == Team.NEUTRAL) {
+                sendLocation(enemyEC, 31, robot.getLocation());
+                tryMoveInDirection(rc.getLocation().directionTo(robot.getLocation()));
+                break;
+            } else if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == enemy) {
+                sendLocation(enemyEC, log2(robot.getConviction()), robot.getLocation());
+                break;
+            } else if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == rc.getTeam()) {
+                sendLocation(ownEC, log2(robot.getConviction()), robot.getLocation());
+                break;
+            }
+            sendLocation(teamID, politicianID, rc.getLocation());
+        }
+        tryStandardMove();
     }
 
     static void runSlanderer() throws GameActionException {
@@ -382,6 +363,7 @@ public strictfp class RobotPlayer {
         }
 
         int mod8Turn = rc.getRoundNum() % 8;
+
         if (mod8Turn == 1 || mod8Turn == 2) {
             if (rc.canGetFlag(ecID)) {
                 lastECFlag = rc.getFlag(ecID);
@@ -442,70 +424,22 @@ public strictfp class RobotPlayer {
 
         if (lastECFlag == enemyEC) {
             tryMoveInDirection(rc.getLocation().directionTo(decodeLocation(lastECFlag)));
-            for (RobotInfo robot : nearbyRobots) {
-                if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == enemy) {
-                    sendLocation(enemyEC, log2(robot.getConviction()), robot.getLocation());
-                    break;
-                } else if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == Team.NEUTRAL) {
-                    sendLocation(enemyEC, 31, robot.getLocation());
-                    break;
-                } else if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == rc.getTeam()) {
-                    sendLocation(ownEC, log2(robot.getConviction()), robot.getLocation());
-                    break;
-                } else {
-                    sendLocation(teamID, politicianID, rc.getLocation());
-                }
-            }
-        } else {
-            for (RobotInfo robot : nearbyRobots) {
-                if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == enemy) {
-                    sendLocation(enemyEC, log2(robot.getConviction()), robot.getLocation());
-                    tryMoveInDirection(rc.getLocation().directionTo(robot.getLocation()));
-                    break;
-                } else if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == Team.NEUTRAL) {
-                    sendLocation(enemyEC, 31, robot.getLocation());
-                    break;
-                } else if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == rc.getTeam()) {
-                    sendLocation(ownEC, log2(robot.getConviction()), robot.getLocation());
-                    break;
-                }
-                sendLocation(teamID, politicianID, rc.getLocation());
-            }
-            tryStandardMove();
         }
-
-        // try {
-        //     if (rc.getFlag(ecID) / 128 / 128 / 32 == enemyEC) {
-        //         tryMoveInDirection(rc.getLocation().directionTo(decodeLocation(rc.getFlag(ecID))));
-        //         for (RobotInfo robot : nearbyRobots) {
-        //             if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() != rc.getTeam()) {
-        //                 sendLocation(enemyEC, log2(robot.getConviction()), robot.getLocation());
-        //                 tryMoveInDirection(rc.getLocation().directionTo(robot.getLocation()));
-        //                 break;
-        //             } else if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == rc.getTeam()) {
-        //                 sendLocation(ownEC, log2(robot.getConviction()), robot.getLocation());
-        //                 break;
-        //             } else {
-        //                 sendLocation(teamID, muckrakerID, rc.getLocation());
-        //             }
-        //         }
-        //     } else {
-        //         for (RobotInfo robot : nearbyRobots) {
-        //             if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() != rc.getTeam()) {
-        //                 sendLocation(enemyEC, log2(robot.getConviction()), robot.getLocation());
-        //                 tryMoveInDirection(rc.getLocation().directionTo(robot.getLocation()));
-        //                 break;
-        //             } else if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == rc.getTeam()) {
-        //                 sendLocation(ownEC, log2(robot.getConviction()), robot.getLocation());
-        //                 break;
-        //             }
-        //             sendLocation(teamID, muckrakerID, rc.getLocation());
-        //         }
-        //         tryStandardMove();
-        //     }
-        // } catch (Exception e) {
-
-        // }
+        for (RobotInfo robot : nearbyRobots) {
+            if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == enemy) {
+                sendLocation(enemyEC, log2(robot.getConviction()), robot.getLocation());
+                tryMoveInDirection(rc.getLocation().directionTo(robot.getLocation()));
+                break;
+            } else if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == Team.NEUTRAL) {
+                sendLocation(enemyEC, 31, robot.getLocation());
+                break;
+            } else if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == rc.getTeam()) {
+                sendLocation(ownEC, log2(robot.getConviction()), robot.getLocation());
+                break;
+            }
+            sendLocation(teamID, politicianID, rc.getLocation());
+        }
+        tryStandardMove();
     }
 
     /**
