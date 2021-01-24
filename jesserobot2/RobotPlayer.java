@@ -383,6 +383,8 @@ public strictfp class RobotPlayer {
                         sendLocation(primeCenter, robot.getLocation());
                         tryMoveInDirection(rc.getLocation().directionTo(robot.getLocation()));
                         break;
+                    } else if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == rc.getTeam()) {
+                        sendLocation(primeOwnCenter, robot.getLocation());
                     }
                     sendLocation(primeTeam, rc.getLocation());
                 }
@@ -392,6 +394,8 @@ public strictfp class RobotPlayer {
                         sendLocation(primeCenter, robot.getLocation());
                         tryMoveInDirection(rc.getLocation().directionTo(robot.getLocation()));
                         break;
+                    } else if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == rc.getTeam()) {
+                        sendLocation(primeOwnCenter, robot.getLocation());
                     }
                     sendLocation(primeTeam, rc.getLocation());
                 }
@@ -417,6 +421,8 @@ public strictfp class RobotPlayer {
             if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() != rc.getTeam()) {
                 sendLocation(primeCenter, robot.getLocation());
                 break;
+            } else if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == rc.getTeam()) {
+                sendLocation(primeOwnCenter, robot.getLocation());
             }
             sendLocation(primeTeam, rc.getLocation());
         }
@@ -440,6 +446,8 @@ public strictfp class RobotPlayer {
             if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() != rc.getTeam()) {
                 sendLocation(primeCenter, robot.getLocation());
                 break;
+            } else if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == rc.getTeam()) {
+                sendLocation(primeOwnCenter, robot.getLocation());
             }
             sendLocation(primeTeam, rc.getLocation());
         }
