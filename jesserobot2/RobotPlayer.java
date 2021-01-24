@@ -34,6 +34,11 @@ public strictfp class RobotPlayer {
     static int primeTeam = 1019;
     static int primeCenter = 1021;
     static int primeOwnCenter = 1013;
+
+    static ArrayList<Integer> teamIDs = new ArrayList<Integer>();
+    teamIDs.put(primeTeam);
+    teamIDs.put(primeCenter);
+    teamIDs.put(primeOwnCenter);
     static int ecID = 0;
 
     static Direction standardDirection;
