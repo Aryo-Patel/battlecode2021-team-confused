@@ -33,11 +33,14 @@ public strictfp class RobotPlayer {
 
     static int primeTeam = 1019;
     static int primeCenter = 1021;
+    static int primeOwnCenter = 1013;
     static int ecID = 0;
 
     static Direction standardDirection;
 
     static ArrayList<Integer> spawnedRobots = new ArrayList<Integer>();
+
+    static ArrayList<MapLocation> queueEC = new ArrayList<MapLocation>();
 
     static void sendLocation(int extraInfo, MapLocation location) throws GameActionException {
         int x = location.x, y = location.y;
@@ -325,15 +328,27 @@ public strictfp class RobotPlayer {
         }
         for (int robot : spawnedRobots) {
             try {
-                if (rc.getFlag(robot) / 128 / 128 == primeCenter) {
-                    rc.setFlag(rc.getFlag(robot));
-                    break;
+                if (rc.getFlag(robot) / 128 / 128 == primeOwnCenter) {
+                    if (queueEC.contains(decodeLocation(rc.getFlag(robot)))) {
+                        queueEC.remove(decodeLocation(rc.getFlag(robot)));
+                    }
+                } else if (rc.getFlag(robot) / 128 / 128 == primeCenter) {
+                    if (queueEC.contains(decodeLocation(rc.getFlag(robot)))) {
+
+                    } else {
+                        queueEC.add(decodeLocation(rc.getFlag(robot)));
+                    }
                 }
-                sendLocation(primeTeam, rc.getLocation());
             } catch (Exception e) {
                 
             }
         }
+        if (queueEC.size() > 0) {
+            sendLocation(primeCenter, queueEC.get(0));
+        } else {
+            sendLocation(primeTeam, rc.getLocation());
+        }
+        rc.bid(rc.getInfluence()/24);
     }
 
     static void runPolitician() throws GameActionException {
@@ -348,6 +363,14 @@ public strictfp class RobotPlayer {
                 if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
                     ecID = robot.getID();
                     standardDirection = rc.getLocation().directionTo(robot.getLocation()).opposite();
+                }
+            }
+        }
+
+        if (affectable.length != 0 && rc.canEmpower(actionRadius)) {
+            for (RobotInfo robot : affectable) {
+                if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() != rc.getTeam()) {
+                    rc.empower(actionRadius);
                 }
             }
         }
@@ -373,14 +396,6 @@ public strictfp class RobotPlayer {
                     sendLocation(primeTeam, rc.getLocation());
                 }
                 tryStandardMove();
-            }
-    
-            if (affectable.length != 0 && rc.canEmpower(actionRadius)) {
-                for (RobotInfo robot : affectable) {
-                    if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() != rc.getTeam()) {
-                        rc.empower(actionRadius);
-                    }
-                }
             }
         } catch (Exception e) {
 
