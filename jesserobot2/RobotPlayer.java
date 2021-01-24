@@ -385,8 +385,9 @@ public strictfp class RobotPlayer {
                         break;
                     } else if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == rc.getTeam()) {
                         sendLocation(primeOwnCenter, robot.getLocation());
+                    } else {
+                        sendLocation(primeTeam, rc.getLocation());
                     }
-                    sendLocation(primeTeam, rc.getLocation());
                 }
             } else {
                 for (RobotInfo robot : nearbyRobots) {
@@ -396,6 +397,7 @@ public strictfp class RobotPlayer {
                         break;
                     } else if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == rc.getTeam()) {
                         sendLocation(primeOwnCenter, robot.getLocation());
+                        break;
                     }
                     sendLocation(primeTeam, rc.getLocation());
                 }
@@ -423,8 +425,10 @@ public strictfp class RobotPlayer {
                 break;
             } else if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == rc.getTeam()) {
                 sendLocation(primeOwnCenter, robot.getLocation());
+                break;
+            } else {
+                sendLocation(primeTeam, rc.getLocation());
             }
-            sendLocation(primeTeam, rc.getLocation());
         }
 
         if (tryStandardMove())
@@ -448,8 +452,10 @@ public strictfp class RobotPlayer {
                 break;
             } else if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == rc.getTeam()) {
                 sendLocation(primeOwnCenter, robot.getLocation());
+                break;
+            } else {
+                sendLocation(primeTeam, rc.getLocation());
             }
-            sendLocation(primeTeam, rc.getLocation());
         }
 
         Team enemy = rc.getTeam().opponent();
