@@ -82,12 +82,15 @@ public strictfp class RobotPlayer {
             return true;
         } else if (rc.canMove(standardDirection.rotateRight().rotateRight())) {
             rc.move(standardDirection.rotateRight().rotateRight());
+            standardDirection = standardDirection.rotateRight().rotateRight();
             return true;
         } else if (rc.canMove(standardDirection.rotateLeft().rotateLeft())) {
             rc.move(standardDirection.rotateLeft().rotateLeft());
+            standardDirection = standardDirection.rotateLeft().rotateLeft();
             return true;
         } else if (rc.canMove(standardDirection.opposite().rotateLeft())) {
             rc.move(standardDirection.opposite().rotateLeft());
+            standardDirection = standardDirection.opposite().rotateLeft();
             return true;
         } else {
             return false;
