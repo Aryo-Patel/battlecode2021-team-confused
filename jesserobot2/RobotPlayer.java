@@ -162,7 +162,7 @@ public strictfp class RobotPlayer {
         return Math.min(offsetX, offsetY);
     }
 
-    static void moveInDirection(Direction dir) throws GameActionException {
+    static void tryMoveInDirection(Direction dir) throws GameActionException {
         // double expectedTurnWait = getExpectedTurnWait();
         // System.out.println(Clock.getBytecodeNum());
         // MapLocation center = rc.getLocation();
@@ -218,6 +218,9 @@ public strictfp class RobotPlayer {
         if (bestDirection != null) {
             if (rc.canMove(bestDirection)) {
                 rc.move(bestDirection);
+                return true;
+            } else {
+                return false;
             }
         }
 
@@ -340,7 +343,7 @@ public strictfp class RobotPlayer {
 
         try {
             if (rc.getFlag(ecID) / 128 / 128 == primeCenter) {
-                moveInDirection(rc.getLocation().directionTo(decodeLocation(rc.getFlag(ecID))));
+                tryMoveInDirection(rc.getLocation().directionTo(decodeLocation(rc.getFlag(ecID))));
                 for (RobotInfo robot : nearbyRobots) {
                     if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() != rc.getTeam()) {
                         sendLocation(primeCenter, robot.getLocation());
@@ -358,7 +361,7 @@ public strictfp class RobotPlayer {
                     }
                     sendLocation(primeTeam, rc.getLocation());
                 }
-                tryMove(standardDirection);
+                tryStandardMove();
             }
     
             if (affectable.length != 0 && rc.canEmpower(actionRadius)) {
@@ -384,7 +387,7 @@ public strictfp class RobotPlayer {
             }
         }
 
-        if (tryMove(standardDirection))
+        if (tryStandardMove())
             System.out.println("I moved!");
     }
 
@@ -411,7 +414,7 @@ public strictfp class RobotPlayer {
                 }
             }
         }
-        if (tryMove(standardDirection))
+        if (tryStandardMove())
             System.out.println("I moved!");
     }
 
