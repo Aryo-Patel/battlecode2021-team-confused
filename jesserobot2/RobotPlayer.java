@@ -98,65 +98,6 @@ public strictfp class RobotPlayer {
         return actualLocation;
     }
 
-    static ArrayList<MapLocation> getVisibleLocations() throws GameActionException {
-        ArrayList<MapLocation> visibleLocations = new ArrayList<MapLocation>();
-        MapLocation center = rc.getLocation();
-        int centerX = center.x;
-        int centerY = center.y;
-        for (int x = centerX - detectionRadius; x < centerX + detectionRadius +1; x++) {
-            for (int y = centerY - detectionRadius; y < centerY + detectionRadius + 1; y++) {
-                MapLocation location = new MapLocation(x, y);
-                if (rc.canDetectLocation(location)) {
-                    visibleLocations.add(location);
-                }
-            }
-        }
-        return visibleLocations;
-    }
-
-    static double getExpectedTurnWait() throws GameActionException {
-        double totalTurnWait = 0.0;
-        double numSquares = 0.0;
-        MapLocation center = rc.getLocation();
-        int centerX = center.x;
-        int centerY = center.y;
-        for (int x = centerX - detectionRadius; x < centerX + detectionRadius +1; x++) {
-            for (int y = centerY - detectionRadius; y < centerY + detectionRadius + 1; y++) {
-                MapLocation location = new MapLocation(x, y);
-                if (rc.canDetectLocation(location)) {
-                    totalTurnWait = totalTurnWait + 1.0/rc.sensePassability(location);
-                    numSquares = numSquares + 1.0;
-                }
-            }
-        }
-        return totalTurnWait/numSquares;
-
-    }
-
-
-    //weird compressing of passability (doesn't account for if there are any units in these locations)
-    static double expectedDirectionCost(Direction dir) throws GameActionException {
-        MapLocation center = rc.getLocation();
-        center = center.add(dir).add(dir);
-
-        double totalTurnWait = 0.0;
-        double numSquares = 0.0;
-
-        if (rc.canDetectLocation(center)) {
-            totalTurnWait = 1.0/rc.sensePassability(center);
-            numSquares = 1.0;
-        }
-
-        for (Direction direction : directions) {
-            if (rc.canDetectLocation(center.add(direction))) {
-                totalTurnWait = totalTurnWait + 1.0/rc.sensePassability(center.add(direction));
-                numSquares = numSquares + 1.0;
-            }
-        }
-
-        return totalTurnWait/numSquares;
-    }
-
     static int shortestDistance(MapLocation loc1, MapLocation loc2) throws GameActionException {
         int offsetX = Math.abs(loc1.x - loc2.x);
         int offsetY = Math.abs(loc1.y - loc2.y);
@@ -164,32 +105,6 @@ public strictfp class RobotPlayer {
     }
 
     static boolean tryMoveInDirection(Direction dir) throws GameActionException {
-        // double expectedTurnWait = getExpectedTurnWait();
-        // System.out.println(Clock.getBytecodeNum());
-        // MapLocation center = rc.getLocation();
-
-        // double MinTurns = Double.POSITIVE_INFINITY;
-        // Direction bestDirection = null;
-
-        // MapLocation target = center;
-        // while (rc.canDetectLocation(target)) {
-        //     target.add(dir);
-        // }
-        // target.add(dir.opposite());
-
-        // MapLocation newLocation;
-        // double totalExpectedTurns;
-        // System.out.println(Clock.getBytecodeNum());
-
-        // for (Direction direction : directions) {
-        //     newLocation = center.add(direction);
-        //     totalExpectedTurns = (1.0/rc.sensePassability(newLocation)) + expectedTurnWait * shortestDistance(newLocation, target);
-        //     if ( totalExpectedTurns < MinTurns ) {
-        //         MinTurns = totalExpectedTurns;
-        //         bestDirection = direction;
-        //     }
-        // }
-
         MapLocation center = rc.getLocation();
 
         double MinTurns = Double.POSITIVE_INFINITY;
@@ -249,33 +164,6 @@ public strictfp class RobotPlayer {
             return true;
         } else {
             return false;
-        }
-    }
-
-    static void moveTowards(MapLocation target) throws GameActionException {
-
-        double averageTurnWait = getExpectedTurnWait();
-
-        MapLocation center = rc.getLocation();
-
-        double MinTurns = Double.POSITIVE_INFINITY;
-        Direction bestDirection = null;
-
-        for (Direction dir : directions) {
-            if (rc.canMove(dir)) {
-                MapLocation newLocation = center.add(dir);
-                double expectedCost = 1.0/rc.sensePassability(center.add(dir)) + expectedDirectionCost(dir) * shortestDistance(newLocation, target);
-                if (expectedCost < MinTurns) {
-                    MinTurns = expectedCost;
-                    bestDirection = dir;
-                }
-            }
-        }
-
-        if (bestDirection != null) {
-            if (rc.canMove(bestDirection)) {
-                rc.move(bestDirection);
-            }
         }
     }
 
