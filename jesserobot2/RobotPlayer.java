@@ -286,8 +286,8 @@ public strictfp class RobotPlayer {
     }
 
     static boolean isOnTeam(RobotInfo robot) throws GameActionException {
-        int extraInfo = rc.getFlag(robot.getID());
-        if (extraInfo == enemyEC || extraInfo == teamID) {
+        int extraInfo = rc.getFlag(robot.getID()) / 128 / 128 / 32;
+        if (teamIDs.contains(extraInfo)) {
             return true;
         } else {
             return false;
