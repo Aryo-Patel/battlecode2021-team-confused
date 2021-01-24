@@ -34,7 +34,7 @@ public strictfp class RobotPlayer {
     // first five binary digits
     static int teamID = 31;
     static int enemyEC = 30;
-    static int ownEC = 30;
+    static int ownEC = 29;
 
     // binary digits 6-10
     static int enlightenmentCenterID = 31;
@@ -198,7 +198,6 @@ public strictfp class RobotPlayer {
         if (rc.canMove(dir)) {
             if ( 1.0/rc.sensePassability(center.add(dir)) < MinTurns ) {
                 MinTurns = Math.floor(1.0/rc.sensePassability(center.add(dir)));
-                System.out.println(MinTurns);
                 bestDirection = dir;
             }
         }
@@ -206,7 +205,6 @@ public strictfp class RobotPlayer {
         if (rc.canMove(dir.rotateLeft())) {
             if ( 1.0/rc.sensePassability(center.add(dir.rotateLeft())) < MinTurns ) {
                 MinTurns = Math.floor(1.0/rc.sensePassability(center.add(dir.rotateLeft())));
-                System.out.println(MinTurns);
                 bestDirection = dir.rotateLeft();
             }
         }
@@ -214,15 +212,11 @@ public strictfp class RobotPlayer {
         if (rc.canMove(dir.rotateRight())) {
             if ( 1.0/rc.sensePassability(center.add(dir.rotateRight())) < MinTurns ) {
                 MinTurns = Math.floor(1.0/rc.sensePassability(center.add(dir.rotateRight())));
-                System.out.println(MinTurns);
                 bestDirection = dir.rotateRight();
             }
         }
 
         if (bestDirection != null) {
-            System.out.println(dir);
-            System.out.println("best direction");
-            System.out.println(bestDirection);
             if (rc.canMove(bestDirection)) {
                 rc.move(bestDirection);
                 return true;
@@ -287,7 +281,7 @@ public strictfp class RobotPlayer {
 
     static boolean isOnTeam(RobotInfo robot) throws GameActionException {
         int extraInfo = rc.getFlag(robot.getID()) / 128 / 128 / 32;
-        if (teamIDs.contains(extraInfo)) {
+        if (teamIDs.contains(extraInfo) && robot.getTeam() == rc.getTeam()) {
             return true;
         } else {
             return false;
@@ -370,7 +364,8 @@ public strictfp class RobotPlayer {
         } else {
             sendLocation(teamID, enlightenmentCenterID, rc.getLocation());
         }
-        rc.bid(rc.getInfluence()/24);
+        int bidAmount = (int) Math.floor(rc.getInfluence()/24);
+        rc.bid(bidAmount);
     }
 
     static void runPolitician() throws GameActionException {
