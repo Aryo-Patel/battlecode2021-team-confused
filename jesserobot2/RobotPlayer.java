@@ -249,7 +249,7 @@ public strictfp class RobotPlayer {
                 
             }
         }
-        int mod8Turn = turnCount % 8;
+        int mod8Turn = rc.getRoundNum() % 8;
         if (mod8Turn == 3 || mod8Turn == 4 || mod8Turn == 5 || mod8Turn == 6) {
             if (queueEC.size() > 0) {
                 for (MapLocation ec : queueEC.keySet()) {
@@ -272,10 +272,16 @@ public strictfp class RobotPlayer {
                         minLocation = ec;
                     }
                 }
-                sendLocation(enemyEC, minConviction, minLocation);
+                if (minLocation != null) {
+                    sendLocation(enemyEC, minConviction, minLocation);
+                } else {
+                    sendLocation(teamID, enlightenmentCenterID, rc.getLocation());
+                }
             } else {
                 sendLocation(teamID, enlightenmentCenterID, rc.getLocation());
             }
+        } else if (mod8Turn == 1 || mod8Turn == 2) {
+            sendLocation(teamID, enlightenmentCenterID, rc.getLocation());
         }
         int bidAmount = (int) Math.floor(rc.getInfluence()/48);
         if (rc.canBid(bidAmount)) {
@@ -300,7 +306,9 @@ public strictfp class RobotPlayer {
             }
         }
 
-        if (turnCount % 8 == 1 || turnCount % 8 == 2) {
+        int mod8Turn = rc.getRoundNum() % 8;
+
+        if (mod8Turn == 7 || mod8Turn == 0) {
             if (rc.canGetFlag(ecID)) {
                 lastECFlag = rc.getFlag(ecID);
             }
@@ -374,7 +382,8 @@ public strictfp class RobotPlayer {
             }
         }
 
-        if (turnCount % 8 == 1 || turnCount % 8 == 2) {
+        int mod8Turn = rc.getRoundNum() % 8;
+        if (mod8Turn == 1 || mod8Turn == 2) {
             if (rc.canGetFlag(ecID)) {
                 lastECFlag = rc.getFlag(ecID);
             }
@@ -412,7 +421,9 @@ public strictfp class RobotPlayer {
             }
         }
 
-        if (turnCount % 8 == 1 || turnCount % 8 == 2) {
+        int mod8Turn = rc.getRoundNum() % 8;
+
+        if (mod8Turn == 3 || mod8Turn == 4 || mod8Turn == 5 || mod8Turn == 6) {
             if (rc.canGetFlag(ecID)) {
                 lastECFlag = rc.getFlag(ecID);
             }
