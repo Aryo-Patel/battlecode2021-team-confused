@@ -35,6 +35,7 @@ public strictfp class RobotPlayer {
     static int teamID = 31;
     static int enemyEC = 30;
     static int ownEC = 29;
+    static int neutralEC = 28;
 
     // binary digits 6-10
     static int enlightenmentCenterID = 31;
@@ -47,6 +48,7 @@ public strictfp class RobotPlayer {
             add(teamID);
             add(enemyEC);
             add(ownEC);
+            add(neutralEC);
         }
     };
     static int ecID = 0;
@@ -57,7 +59,8 @@ public strictfp class RobotPlayer {
 
     static ArrayList<Integer> spawnedRobots = new ArrayList<Integer>();
 
-    static TreeMap<MapLocation, Integer> queueEC = new TreeMap<MapLocation, Integer>();
+    static TreeMap<MapLocation, Integer> enemyECs = new TreeMap<MapLocation, Integer>();
+    static TreeMap<MapLocation, Integer> neutralECs = new TreeMap<MapLocation, Integer>();
 
     static int log2(int N) {
         return (int) (Math.log(N) / Math.log(2));
@@ -233,41 +236,57 @@ public strictfp class RobotPlayer {
         for (int robot : spawnedRobots) {
             if (rc.canGetFlag(robot)) {
                 if (rc.getFlag(robot) / 128 / 128 / 32 == ownEC) {
-                    if (queueEC.containsKey(decodeLocation(rc.getFlag(robot)))) {
-                        queueEC.remove(decodeLocation(rc.getFlag(robot)));
-                    } else {
-
+                    if (enemyECs.containsKey(decodeLocation(rc.getFlag(robot)))) {
+                        enemyECs.remove(decodeLocation(rc.getFlag(robot)));
+                    } else if (neutralECs.containsKey(decodeLocation(rc.getFlag(robot)))) {
+                        neutralECs.remove(decodeLocation(rc.getFlag(robot)));
                     }
                 } else if (rc.getFlag(robot) / 128 / 128 / 32 == enemyEC) {
-                    if (queueEC.containsKey(decodeLocation(rc.getFlag(robot)))) {
-                        queueEC.replace(decodeLocation(rc.getFlag(robot)), (rc.getFlag(robot) / 128 / 128)%32);
+                    if (enemyECs.containsKey(decodeLocation(rc.getFlag(robot)))) {
+                        enemyECs.replace(decodeLocation(rc.getFlag(robot)), (rc.getFlag(robot) / 128 / 128)%32);
+                    } else if (neutralECs.containsKey(decodeLocation(rc.getFlag(robot)))) {
+                        neutralECs.remove(decodeLocation(rc.getFlag(robot)));
+                        enemyECs.put(decodeLocation(rc.getFlag(robot)), (rc.getFlag(robot) / 128 / 128)%32);
                     } else {
-                        queueEC.put(decodeLocation(rc.getFlag(robot)), (rc.getFlag(robot) / 128 / 128)%32);
+                        enemyECs.put(decodeLocation(rc.getFlag(robot)), (rc.getFlag(robot) / 128 / 128)%32);
+                    }
+                } else if (rc.getFlag(robot) / 128 / 128 / 32 == neutralEC) {
+                    if (neutralECs.containsKey(decodeLocation(rc.getFlag(robot)))) {
+                        neutralECs.replace(decodeLocation(rc.getFlag(robot))), (rc.getFlag(robot) / 128 / 128)%32)
+                    } else {
+                        neutralECs.put(decodeLocation(rc.getFlag(robot)), (rc.getFlag(robot) / 128 / 128)%32)
                     }
                 }
             }
         }
 
         int mod8Turn = rc.getRoundNum() % 8;
+
         if (mod8Turn == 7 || mod8Turn == 0) {
-            if (queueEC.size() > 0) {
-                for (MapLocation ec : queueEC.keySet()) {
-                    if (queueEC.get(ec) == 31) {
-                        sendLocation(enemyEC, 31, ec);
-                        break;
+            if (neutralECs.size() > 0) {
+                int minConviction = 32;
+                MapLocation minLocation = null;
+                for (MapLocation ec : neutralECs.keySet()) {
+                    if (neutralECs.get(ec) < minConviction) {
+                        minConviction = neutralECs.get(ec);
+                        minLocation = ec;
                     }
+                }
+                if (minLocation != null) {
+                    sendLocation(neutralEC, minConviction, minLocation);
+                } else {
                     sendLocation(teamID, enlightenmentCenterID, rc.getLocation());
                 }
             } else {
                 sendLocation(teamID, enlightenmentCenterID, rc.getLocation());
             }
         } else if (mod8Turn == 3 || mod8Turn == 4 || mod8Turn == 5 || mod8Turn == 6) {
-            if (queueEC.size() > 0) {
-                int minConviction = 31;
+            if (enemyECs.size() > 0) {
+                int minConviction = 32;
                 MapLocation minLocation = null;
-                for (MapLocation ec : queueEC.keySet()) {
-                    if (queueEC.get(ec) < minConviction) {
-                        minConviction = queueEC.get(ec);
+                for (MapLocation ec : enemyECs.keySet()) {
+                    if (enemyECs.get(ec) < minConviction) {
+                        minConviction = enemyECs.get(ec);
                         minLocation = ec;
                     }
                 }
@@ -287,7 +306,7 @@ public strictfp class RobotPlayer {
         if (rc.canBid(bidAmount)) {
             rc.bid(bidAmount);
         }
-        System.out.println(queueEC);
+        System.out.println(enemyECs);
     }
 
     static void runPolitician() throws GameActionException {
@@ -330,12 +349,12 @@ public strictfp class RobotPlayer {
             }
         }
 
-        if (lastECFlag == enemyEC) {
+        if (lastECFlag / 128 / 128 / 32 == enemyEC) {
             tryMoveInDirection(rc.getLocation().directionTo(decodeLocation(lastECFlag)));
         }
         for (RobotInfo robot : nearbyRobots) {
             if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == Team.NEUTRAL) {
-                sendLocation(enemyEC, 31, robot.getLocation());
+                sendLocation(neutralEC, log2(robot.getConviction()), robot.getLocation());
                 tryMoveInDirection(rc.getLocation().directionTo(robot.getLocation()));
                 break;
             } else if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == enemy) {
@@ -372,7 +391,7 @@ public strictfp class RobotPlayer {
 
         for (RobotInfo robot : nearbyRobots) {
             if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == Team.NEUTRAL) {
-                sendLocation(enemyEC, 31, robot.getLocation());
+                sendLocation(neutralEC, log2(robot.getConviction()), robot.getLocation());
                 break;
             } else if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == enemy) {
                 sendLocation(enemyEC, log2(robot.getConviction()), robot.getLocation());
@@ -422,7 +441,7 @@ public strictfp class RobotPlayer {
             }
         }
 
-        if (lastECFlag == enemyEC) {
+        if (lastECFlag / 128 / 128 / 32 == enemyEC) {
             tryMoveInDirection(rc.getLocation().directionTo(decodeLocation(lastECFlag)));
         }
         for (RobotInfo robot : nearbyRobots) {
@@ -431,7 +450,7 @@ public strictfp class RobotPlayer {
                 tryMoveInDirection(rc.getLocation().directionTo(robot.getLocation()));
                 break;
             } else if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == Team.NEUTRAL) {
-                sendLocation(enemyEC, 31, robot.getLocation());
+                sendLocation(neutralEC, log2(robot.getConviction()), robot.getLocation());
                 break;
             } else if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == rc.getTeam()) {
                 sendLocation(ownEC, log2(robot.getConviction()), robot.getLocation());
