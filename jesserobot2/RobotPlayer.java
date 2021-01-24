@@ -359,13 +359,17 @@ public strictfp class RobotPlayer {
             }
         }
         if (queueEC.size() > 0) {
+
             Map.Entry<MapLocation, Integer> firstEC = queueEC.firstEntry();
             sendLocation(enemyEC, firstEC.getValue(), firstEC.getKey());
         } else {
             sendLocation(teamID, enlightenmentCenterID, rc.getLocation());
         }
         int bidAmount = (int) Math.floor(rc.getInfluence()/24);
-        rc.bid(bidAmount);
+        if (rc.canBid(bidAmount)) {
+            rc.bid(bidAmount);
+        }
+        System.out.println(queueEC);
     }
 
     static void runPolitician() throws GameActionException {
