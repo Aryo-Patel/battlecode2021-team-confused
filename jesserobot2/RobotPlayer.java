@@ -359,9 +359,15 @@ public strictfp class RobotPlayer {
             }
         }
         if (queueEC.size() > 0) {
-
-            Map.Entry<MapLocation, Integer> firstEC = queueEC.firstEntry();
-            sendLocation(enemyEC, firstEC.getValue(), firstEC.getKey());
+            int minConviction = 32;
+            MapLocation minLocation = null;
+            for (MapLocation ec : queueEC.keySet()) {
+                if (queueEC.get(ec) < minConviction) {
+                    minConviction = queueEC.get(ec);
+                    minLocation = ec;
+                }
+            }
+            sendLocation(enemyEC, minConviction, minLocation);
         } else {
             sendLocation(teamID, enlightenmentCenterID, rc.getLocation());
         }
