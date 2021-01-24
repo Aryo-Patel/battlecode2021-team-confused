@@ -211,23 +211,20 @@ public strictfp class RobotPlayer {
     }
 
     static boolean tryStandardMove() throws GameActionException {
-        if (tryMoveInDirection(standardDirection)) {
-            System.out.println(standardDirection);
-            return true;
-        } else if (tryMoveInDirection(standardDirection.rotateRight().rotateRight())) {
+        MapLocation center = rc.getLocation();
+        if (rc.canSenseLocation(center.add(standardDirection))) {
+            standardDirection = standardDirection;
+        } else if (rc.canSenseLocation(center.add(standardDirection.rotateRight().rotateRight()))) {
             standardDirection = standardDirection.rotateRight().rotateRight();
-            System.out.println(standardDirection);
-            return true;
-        } else if (tryMoveInDirection(standardDirection.rotateLeft().rotateLeft())) {
+        } else if (rc.canSenseLocation(center.add(standardDirection.rotateLeft().rotateLeft()))) {
             standardDirection = standardDirection.rotateLeft().rotateLeft();
-            System.out.println(standardDirection);
-            return true;
-        } else if (tryMoveInDirection(standardDirection.opposite().rotateLeft())) {
+        } else if (rc.canSenseLocation(center.add(standardDirection.opposite().rotateLeft()))) {
             standardDirection = standardDirection.opposite().rotateLeft();
-            System.out.println(standardDirection);
+        }
+
+        if (tryMoveInDirection(standardDirection)) {
             return true;
         } else {
-            System.out.println("couldn't move");
             return false;
         }
     }
