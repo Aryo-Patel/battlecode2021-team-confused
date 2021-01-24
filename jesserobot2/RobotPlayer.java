@@ -341,7 +341,7 @@ public strictfp class RobotPlayer {
                     }
                     sendLocation(primeTeam, rc.getLocation());
                 }
-                tryMove(randomDirection());
+                tryMove(standardDirection);
             }
     
             if (affectable.length != 0 && rc.canEmpower(actionRadius)) {
@@ -367,7 +367,7 @@ public strictfp class RobotPlayer {
             }
         }
 
-        if (tryMove(randomDirection()))
+        if (tryMove(standardDirection))
             System.out.println("I moved!");
     }
 
@@ -394,7 +394,7 @@ public strictfp class RobotPlayer {
                 }
             }
         }
-        if (tryMove(randomDirection()))
+        if (tryMove(standardDirection))
             System.out.println("I moved!");
     }
 
