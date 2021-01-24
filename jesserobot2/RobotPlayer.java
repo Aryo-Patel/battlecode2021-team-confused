@@ -51,6 +51,8 @@ public strictfp class RobotPlayer {
     };
     static int ecID = 0;
 
+    static int lastECFlag = 0;
+
     static Direction standardDirection;
 
     static ArrayList<Integer> spawnedRobots = new ArrayList<Integer>();
@@ -215,6 +217,7 @@ public strictfp class RobotPlayer {
     }
 
     static void runEnlightenmentCenter() throws GameActionException {
+        System.out.println(turnCount);
         RobotType[] spawnOrder = {RobotType.SLANDERER, RobotType.MUCKRAKER, RobotType.MUCKRAKER, RobotType.POLITICIAN};
         RobotType toBuild = spawnOrder[((turnCount - 1)/2) % 4];
         int[] spawnInfluence = {rc.getInfluence()/12, rc.getInfluence()/24, rc.getInfluence()/24, rc.getInfluence()/8};
@@ -372,6 +375,8 @@ public strictfp class RobotPlayer {
     }
 
     static void runMuckraker() throws GameActionException {
+        System.out.println(turnCount);
+        Team enemy = rc.getTeam().opponent();
         RobotInfo[] nearbyRobots = rc.senseNearbyRobots();
         if (ecID == 0) {
             for (RobotInfo robot : nearbyRobots) {
@@ -397,7 +402,6 @@ public strictfp class RobotPlayer {
             }
         }
 
-        Team enemy = rc.getTeam().opponent();
         int actionRadius = rc.getType().actionRadiusSquared;
         for (RobotInfo robot : rc.senseNearbyRobots(actionRadius, enemy)) {
             if (robot.type.canBeExposed()) {
