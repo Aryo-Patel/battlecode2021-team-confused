@@ -306,7 +306,8 @@ public strictfp class RobotPlayer {
     static void runEnlightenmentCenter() throws GameActionException {
         RobotType[] spawnOrder = {RobotType.SLANDERER, RobotType.MUCKRAKER, RobotType.MUCKRAKER, RobotType.POLITICIAN};
         RobotType toBuild = spawnOrder[((turnCount - 1)/2) % 4];
-        int influence = rc.getInfluence()/10;
+        int[] spawnInfluence = {rc.getInfluence()/8, rc.getInfluence()/12, rc.getInfluence()/12, rc.getInfluence()/4};
+        int influence = spawnInfluence[((turnCount - 1)/2) % 4];
         for (int i = 0; i < 8; i++) {
             Direction dir = directions[(((turnCount - 1)/2%8) + i)%8];
             if (rc.canBuildRobot(toBuild, dir, influence)) {
