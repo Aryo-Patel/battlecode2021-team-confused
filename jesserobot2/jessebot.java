@@ -1,6 +1,8 @@
 package src;
 
 import battlecode.common.*;
+import scala.Int;
+
 import java.util.*;
 import java.lang.Math;
 
@@ -109,30 +111,54 @@ public strictfp class jessebot{
         return Math.min(offsetX, offsetY);
     }
 
+    static double passThreshold = 0.3; // anything lower is considered an obstacle
+    static Direction bugDir = null;
+    static double prevDistToTarget = Integer.MAX_VALUE, currentDistToTarget = -1;
+
+    static boolean tryBugPath(MapLocation target) throws GameActionException{
+        /*
+         * LH bug:
+         * travel in straight line to target, go around obstacle if we're back on line,
+         * then check if we're closer to obstacle than we were before hitting obstacle
+         * if yes, continue along line, if no continue along obstacle
+         * TODO: if close to target (det threshold), run more efficient pathing alg
+         */
+        Direction dir = rc.getLocation().directionTo(target);
+        currentDistToTarget = rc.getLocation().distanceSquaredTo(target); // set every bug move
+        if (rc.canMove(dir) && (rc.sensePassability(rc.getLocation().add(dir))) >= passThreshold
+            && currentDistToTarget <= prevDistToTarget){
+            rc.move(dir);
+            bugDir = null;
+        }
+        else{ // blocked, move along left side of obstacle
+            if (bugDir == null)
+                bugDir = dir.rotateLeft();
+            for (int i = 0; i < 8; ++i) {
+                if (rc.canMove(bugDir) && rc.sensePassability(rc.getLocation().add(bugDir)) >= passThreshold) {
+                    rc.move(bugDir);
+                    bugDir = bugDir.rotateLeft();
+                    break;
+                }
+                bugDir = bugDir.rotateRight();
+            }
+        }
+        prevDistToTarget = currentDistToTarget;
+        return true;
+    }
+
+
     static boolean tryMoveInDirection(Direction dir) throws GameActionException {
         MapLocation center = rc.getLocation();
 
         double MinTurns = Double.POSITIVE_INFINITY;
         Direction bestDirection = null;
 
-        if (rc.canMove(dir)) {
-            if ( 1.0/rc.sensePassability(center.add(dir)) < MinTurns ) {
-                MinTurns = Math.floor(1.0/rc.sensePassability(center.add(dir)));
-                bestDirection = dir;
-            }
-        }
-
-        if (rc.canMove(dir.rotateLeft())) {
-            if ( 1.0/rc.sensePassability(center.add(dir.rotateLeft())) < MinTurns ) {
-                MinTurns = Math.floor(1.0/rc.sensePassability(center.add(dir.rotateLeft())));
-                bestDirection = dir.rotateLeft();
-            }
-        }
-
-        if (rc.canMove(dir.rotateRight())) {
-            if ( 1.0/rc.sensePassability(center.add(dir.rotateRight())) < MinTurns ) {
-                MinTurns = Math.floor(1.0/rc.sensePassability(center.add(dir.rotateRight())));
-                bestDirection = dir.rotateRight();
+        for (Direction d: new Direction[]{dir, dir.rotateLeft(), dir.rotateRight()}){
+            if (rc.canMove(d)){
+                if ( 1.0/rc.sensePassability(center.add(d)) < MinTurns ) {
+                    MinTurns = Math.floor(1.0/rc.sensePassability(center.add(d)));
+                    bestDirection = d;
+                }
             }
         }
 
@@ -155,21 +181,21 @@ public strictfp class jessebot{
 
     static boolean tryStandardMove() throws GameActionException {
         MapLocation center = rc.getLocation();
-        if (rc.canSenseLocation(center.add(standardDirection))) {
+        if (rc.canSenseLocation(center.add(standardDirection)))
             standardDirection = standardDirection;
-        } else if (rc.canSenseLocation(center.add(standardDirection.rotateRight().rotateRight()))) {
+        else if (rc.canSenseLocation(center.add(standardDirection.rotateRight().rotateRight())))
             standardDirection = standardDirection.rotateRight().rotateRight();
-        } else if (rc.canSenseLocation(center.add(standardDirection.rotateLeft().rotateLeft()))) {
+        else if (rc.canSenseLocation(center.add(standardDirection.rotateLeft().rotateLeft())))
             standardDirection = standardDirection.rotateLeft().rotateLeft();
-        } else if (rc.canSenseLocation(center.add(standardDirection.opposite().rotateLeft()))) {
+        else if (rc.canSenseLocation(center.add(standardDirection.opposite().rotateLeft())))
             standardDirection = standardDirection.opposite().rotateLeft();
-        }
 
         if (tryMoveInDirection(standardDirection)) {
             return true;
         } else {
             return false;
         }
+
     }
 
     static boolean isOnTeam(RobotInfo robot) throws GameActionException {
@@ -226,7 +252,7 @@ public strictfp class jessebot{
         if (current_influence != -1){ // we have already made a bid
             if (current_influence == influence_before_bid - bidAmount) // we won previous bid
                 bidAmount *= 1.1; // idk this is probably too high
-            else
+            else if (current_influence == influence_before_bid - (bidAmount/2)) // highest EC bidder but lost bid
                 bidAmount *= 0.9; //idk this is arbitrary, 10% decrease
         }
 
@@ -323,14 +349,15 @@ public strictfp class jessebot{
 
         int mod8Turn = rc.getRoundNum() % 8;
 
-        if (mod8Turn == 7 || mod8Turn == 0) {
+        if (mod8Turn == 7 || mod8Turn == 0) { // find neutral ECs (if any)
             if (rc.canGetFlag(ecID)) {
                 lastECFlag = rc.getFlag(ecID);
             }
         }
 
+        // empower enemy/neutral EC if any, otherwise empower enemy units
         if (affectable.length != 0 && rc.canEmpower(actionRadius)) {
-            int damageDone = (int) Math.floor((rc.getConviction() - GameConstants.EMPOWER_TAX) / affectable.length);
+            int damageDone = (int) (Math.floor(rc.getConviction() - GameConstants.EMPOWER_TAX) / affectable.length);
             int killableUnits = 0;
             for (RobotInfo robot : affectable) {
                 if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() != rc.getTeam()) {
@@ -347,11 +374,13 @@ public strictfp class jessebot{
 
         if (lastECFlag == enemyEC) {
             tryMoveInDirection(rc.getLocation().directionTo(decodeLocation(lastECFlag)));
+            //tryBugPath(decodeLocation(lastECFlag));
         }
         for (RobotInfo robot : nearbyRobots) {
             if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == Team.NEUTRAL) {
                 sendLocation(enemyEC, 31, robot.getLocation());
                 tryMoveInDirection(rc.getLocation().directionTo(robot.getLocation()));
+                //tryBugPath(robot.getLocation());
                 break;
             } else if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == enemy) {
                 sendLocation(enemyEC, log2(robot.getConviction()), robot.getLocation());
@@ -439,11 +468,13 @@ public strictfp class jessebot{
 
         if (lastECFlag == enemyEC) {
             tryMoveInDirection(rc.getLocation().directionTo(decodeLocation(lastECFlag)));
+            //tryBugPath(decodeLocation(lastECFlag));
         }
         for (RobotInfo robot : nearbyRobots) {
             if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == enemy) {
                 sendLocation(enemyEC, log2(robot.getConviction()), robot.getLocation());
                 tryMoveInDirection(rc.getLocation().directionTo(robot.getLocation()));
+                // tryBugPath(robot.getLocation());
                 break;
             } else if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == Team.NEUTRAL) {
                 sendLocation(enemyEC, 31, robot.getLocation());
@@ -457,36 +488,4 @@ public strictfp class jessebot{
         tryStandardMove();
     }
 
-    /**
-     * Returns a random Direction.
-     *
-     * @return a random Direction
-     */
-    static Direction randomDirection() {
-        return directions[(int) (Math.random() * directions.length)];
-    }
-
-    /**
-     * Returns a random spawnable RobotType
-     *
-     * @return a random RobotType
-     */
-    static RobotType randomSpawnableRobotType() {
-        return spawnableRobot[(int) (Math.random() * spawnableRobot.length)];
-    }
-
-    /**
-     * Attempts to move in a given direction.
-     *
-     * @param dir The intended direction of movement
-     * @return true if a move was performed
-     * @throws GameActionException
-     */
-    static boolean tryMove(Direction dir) throws GameActionException {
-        System.out.println("I am trying to move " + dir + "; " + rc.isReady() + " " + rc.getCooldownTurns() + " " + rc.canMove(dir));
-        if (rc.canMove(dir)) {
-            rc.move(dir);
-            return true;
-        } else return false;
-    }
 }
