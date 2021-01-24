@@ -283,10 +283,19 @@ public strictfp class RobotPlayer {
         }
 
         if (affectable.length != 0 && rc.canEmpower(actionRadius)) {
+            int damageDone = (int) Math.floor((rc.getConviction() - GameConstants.EMPOWER_TAX) / affectable.length);
+            int killableUnits = 0;
             for (RobotInfo robot : affectable) {
                 if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() != rc.getTeam()) {
                     rc.empower(actionRadius);
+                    break;
+                } else if (robot.getTeam() != rc.getTeam() && robot.getConviction() < damageDone) {
+                        killableUnits++;
+                    }
                 }
+            }
+            if (rc.canEmpower() && killableUnits > 0) {
+                rc.empower(actionRadius);
             }
         }
 
