@@ -31,10 +31,12 @@ public strictfp class RobotPlayer {
 
     static int detectionRadius = 6;
 
+    // first five binary digits
     static int teamID = 31;
     static int enemyEC = 30;
     static int ownEC = 30;
 
+    // binary digits 6-10
     static int enlightenmentCenterID = 31;
     static int politicanID = 30;
     static int slandererID = 29;
@@ -53,7 +55,7 @@ public strictfp class RobotPlayer {
 
     static ArrayList<Integer> spawnedRobots = new ArrayList<Integer>();
 
-    static ArrayList<MapLocation> queueEC = new ArrayList<MapLocation>();
+    static TreeMap<MapLocation, Double> queueEC = new TreeMap<MapLocation, Double>();
 
     static void sendLocation(int extraInfo1, int extraInfo2, MapLocation location) throws GameActionException {
         int x = location.x, y = location.y;
@@ -341,15 +343,15 @@ public strictfp class RobotPlayer {
         }
         for (int robot : spawnedRobots) {
             try {
-                if (rc.getFlag(robot) / 128 / 128 == ownEC) {
-                    if (queueEC.contains(decodeLocation(rc.getFlag(robot)))) {
+                if (rc.getFlag(robot) / 128 / 128 / 32 == ownEC) {
+                    if (queueEC.containsKey(decodeLocation(rc.getFlag(robot)))) {
                         queueEC.remove(decodeLocation(rc.getFlag(robot)));
                     }
-                } else if (rc.getFlag(robot) / 128 / 128 == enemyEC) {
-                    if (queueEC.contains(decodeLocation(rc.getFlag(robot)))) {
+                } else if (rc.getFlag(robot) / 128 / 128 / 32 == enemyEC) {
+                    if (queueEC.containsKey(decodeLocation(rc.getFlag(robot)))) {
 
                     } else {
-                        queueEC.add(decodeLocation(rc.getFlag(robot)));
+                        queueEC.put(decodeLocation(rc.getFlag(robot)), (rc.getFlag(robot) / 128 / 128)%32);
                     }
                 }
             } catch (Exception e) {
