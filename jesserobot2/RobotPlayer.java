@@ -358,7 +358,7 @@ public strictfp class RobotPlayer {
                 for (RobotInfo robot : nearbyRobots) {
                     if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() != rc.getTeam()) {
                         sendLocation(primeCenter, robot.getLocation());
-                        tryMove(rc.getLocation().directionTo(robot.getLocation()));
+                        tryMoveInDirection(rc.getLocation().directionTo(robot.getLocation()));
                         break;
                     }
                     sendLocation(primeTeam, rc.getLocation());
@@ -367,7 +367,7 @@ public strictfp class RobotPlayer {
                 for (RobotInfo robot : nearbyRobots) {
                     if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() != rc.getTeam()) {
                         sendLocation(primeCenter, robot.getLocation());
-                        tryMove(rc.getLocation().directionTo(robot.getLocation()));
+                        tryMoveInDirection(rc.getLocation().directionTo(robot.getLocation()));
                         break;
                     }
                     sendLocation(primeTeam, rc.getLocation());
@@ -398,6 +398,14 @@ public strictfp class RobotPlayer {
             }
         }
 
+        for (RobotInfo robot : nearbyRobots) {
+            if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() != rc.getTeam()) {
+                sendLocation(primeCenter, robot.getLocation());
+                break;
+            }
+            sendLocation(primeTeam, rc.getLocation());
+        }
+
         if (tryStandardMove())
             System.out.println("I moved!");
     }
@@ -411,6 +419,14 @@ public strictfp class RobotPlayer {
                     standardDirection = rc.getLocation().directionTo(robot.getLocation()).opposite();
                 }
             }
+        }
+
+        for (RobotInfo robot : nearbyRobots) {
+            if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() != rc.getTeam()) {
+                sendLocation(primeCenter, robot.getLocation());
+                break;
+            }
+            sendLocation(primeTeam, rc.getLocation());
         }
 
         Team enemy = rc.getTeam().opponent();
