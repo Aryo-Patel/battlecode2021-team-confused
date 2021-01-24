@@ -285,7 +285,7 @@ public strictfp class RobotPlayer {
             }
         }
 
-        if (turnCount % 16 == 1 || turnCount % 16 == 2) {
+        if (turnCount % 8 == 1 || turnCount % 8 == 2) {
             lastECFlag = rc.getFlag(ecID);
         }
 
@@ -359,7 +359,7 @@ public strictfp class RobotPlayer {
             }
         }
 
-        if (turnCount % 16 == 1 || turnCount % 16 == 2) {
+        if (turnCount % 8 == 1 || turnCount % 16 == 8) {
             lastECFlag = rc.getFlag(ecID);
         }
 
@@ -395,7 +395,7 @@ public strictfp class RobotPlayer {
             }
         }
 
-        if (turnCount % 16 == 1 || turnCount % 16 == 2) {
+        if (turnCount % 8 == 1 || turnCount % 8 == 2) {
             lastECFlag = rc.getFlag(ecID);
         }
 
