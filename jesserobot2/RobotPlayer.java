@@ -250,7 +250,7 @@ public strictfp class RobotPlayer {
             }
         }
         if (queueEC.size() > 0) {
-            int minConviction = 32;
+            int minConviction = 31;
             MapLocation minLocation = null;
             for (MapLocation ec : queueEC.keySet()) {
                 if (queueEC.get(ec) < minConviction) {
@@ -312,10 +312,10 @@ public strictfp class RobotPlayer {
                 tryMoveInDirection(rc.getLocation().directionTo(decodeLocation(lastECFlag)));
                 for (RobotInfo robot : nearbyRobots) {
                     if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == Team.NEUTRAL) {
-                        sendLocation(enemyEC, log2(robot.getConviction()), robot.getLocation());
+                        sendLocation(enemyEC, 31, robot.getLocation());
                         break;
                     } else if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == enemy) {
-                        sendLocation(enemyEC, 0, robot.getLocation());
+                        sendLocation(enemyEC, log2(robot.getConviction()), robot.getLocation());
                         break;
                     } else if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == rc.getTeam()) {
                         sendLocation(ownEC, log2(robot.getConviction()), robot.getLocation());
@@ -327,11 +327,11 @@ public strictfp class RobotPlayer {
             } else {
                 for (RobotInfo robot : nearbyRobots) {
                     if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == Team.NEUTRAL) {
-                        sendLocation(enemyEC, log2(robot.getConviction()), robot.getLocation());
+                        sendLocation(enemyEC, 31, robot.getLocation());
                         tryMoveInDirection(rc.getLocation().directionTo(robot.getLocation()));
                         break;
                     } else if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == enemy) {
-                        sendLocation(enemyEC, 0, robot.getLocation());
+                        sendLocation(enemyEC, log2(robot.getConviction()), robot.getLocation());
                         tryMoveInDirection(rc.getLocation().directionTo(robot.getLocation()));
                         break;
                     } else if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == rc.getTeam()) {
@@ -366,11 +366,11 @@ public strictfp class RobotPlayer {
         }
 
         for (RobotInfo robot : nearbyRobots) {
-            if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == enemy) {
-                sendLocation(enemyEC, log2(robot.getConviction()), robot.getLocation());
+            if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == Team.NEUTRAL) {
+                sendLocation(enemyEC, 31, robot.getLocation());
                 break;
-            } else if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() != rc.getTeam()) {
-                sendLocation(enemyEC, 0, robot.getLocation());
+            } else if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == enemy) {
+                sendLocation(enemyEC, log2(robot.getConviction()), robot.getLocation());
                 break;
             } else if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == rc.getTeam()) {
                 sendLocation(ownEC, log2(robot.getConviction()), robot.getLocation());
@@ -422,7 +422,7 @@ public strictfp class RobotPlayer {
                     sendLocation(enemyEC, log2(robot.getConviction()), robot.getLocation());
                     break;
                 } else if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == Team.NEUTRAL) {
-                    sendLocation(enemyEC, 0, robot.getLocation());
+                    sendLocation(enemyEC, 31, robot.getLocation());
                     break;
                 } else if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == rc.getTeam()) {
                     sendLocation(ownEC, log2(robot.getConviction()), robot.getLocation());
@@ -438,7 +438,7 @@ public strictfp class RobotPlayer {
                     tryMoveInDirection(rc.getLocation().directionTo(robot.getLocation()));
                     break;
                 } else if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == Team.NEUTRAL) {
-                    sendLocation(enemyEC, 0, robot.getLocation());
+                    sendLocation(enemyEC, 31, robot.getLocation());
                     tryMoveInDirection(rc.getLocation().directionTo(robot.getLocation()));
                     break;
                 } else if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == rc.getTeam()) {
