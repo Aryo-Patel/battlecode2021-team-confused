@@ -261,18 +261,18 @@ public strictfp class RobotPlayer{
                 bidAmount *= 0.9; //idk this is arbitrary, 10% decrease
         }
 
-        RobotType[] spawnOrder = {RobotType.SLANDERER, RobotType.MUCKRAKER, RobotType.MUCKRAKER, RobotType.POLITICIAN};
-        RobotType toBuild = spawnOrder[((rc.getRoundNum() - 1)/2) % 4];
-        int[] spawnInfluence = {rc.getInfluence()/12, rc.getInfluence()/24, rc.getInfluence()/24, rc.getInfluence()/8};
-        int influence = spawnInfluence[((rc.getRoundNum() - 1)/2) % 4];
-        for (int i = 0; i < 8; i++) {
-            Direction dir = directions[(((rc.getRoundNum() - 1)/2%8) + i)%8];
-            if (rc.canBuildRobot(toBuild, dir, influence)) {
-                rc.buildRobot(toBuild, dir, influence);
-                spawnedRobots.add(rc.senseRobotAtLocation(rc.getLocation().add(dir)).getID());
-                break;
-            }
-        }
+        // RobotType[] spawnOrder = {RobotType.SLANDERER, RobotType.MUCKRAKER, RobotType.MUCKRAKER, RobotType.POLITICIAN};
+        // RobotType toBuild = spawnOrder[((rc.getRoundNum() - 1)/2) % 4];
+        // int[] spawnInfluence = {rc.getInfluence()/12, rc.getInfluence()/24, rc.getInfluence()/24, rc.getInfluence()/8};
+        // int influence = spawnInfluence[((rc.getRoundNum() - 1)/2) % 4];
+        // for (int i = 0; i < 8; i++) {
+        //     Direction dir = directions[(((rc.getRoundNum() - 1)/2%8) + i)%8];
+        //     if (rc.canBuildRobot(toBuild, dir, influence)) {
+        //         rc.buildRobot(toBuild, dir, influence);
+        //         spawnedRobots.add(rc.senseRobotAtLocation(rc.getLocation().add(dir)).getID());
+        //         break;
+        //     }
+        // }
 
         // updates hash maps of ECs based on displayed flags
         for (int robot : spawnedRobots) {
@@ -315,6 +315,14 @@ public strictfp class RobotPlayer{
                 }
                 if (minLocation != null) {
                     sendLocation(neutralEC, minConviction, minLocation);
+                    for (int i = 0; i < 8; i++) {
+                        Direction dir = directions[(((rc.getRoundNum() - 1)/2%8) + i)%8];
+                        if (rc.canBuildRobot(RobotType.POLITICIAN, dir, Math.pow(2, minConviction+1))) {
+                            rc.buildRobot(RobotType.POLITICIAN, dir, Math.pow(2, minConviction+1);
+                            spawnedRobots.add(rc.senseRobotAtLocation(rc.getLocation().add(dir)).getID());
+                            break;
+                        }
+                    }
                 } else {
                     sendLocation(teamID, enlightenmentCenterID, rc.getLocation());
                 }
@@ -339,8 +347,24 @@ public strictfp class RobotPlayer{
             } else {
                 sendLocation(teamID, enlightenmentCenterID, rc.getLocation());
             }
+            for (int i = 0; i < 8; i++) {
+                Direction dir = directions[(((rc.getRoundNum() - 1)/2%8) + i)%8];
+                if (rc.canBuildRobot(RobotType.MUCKRAKER, dir, rc.getInfluence()/24)) {
+                    rc.buildRobot(RobotType.MUCKRAKER, dir, rc.getInfluence()/24);
+                    spawnedRobots.add(rc.senseRobotAtLocation(rc.getLocation().add(dir)).getID());
+                    break;
+                }
+            }
         } else if (mod8Turn == 1 || mod8Turn == 2) {
             sendLocation(teamID, enlightenmentCenterID, rc.getLocation());
+            for (int i = 0; i < 8; i++) {
+                Direction dir = directions[(((rc.getRoundNum() - 1)/2%8) + i)%8];
+                if (rc.canBuildRobot(RobotType.SLANDERER, dir, rc.getInfluence()/16)) {
+                    rc.buildRobot(RobotType.SLANDERER, dir, rc.getInfluence()/16);
+                    spawnedRobots.add(rc.senseRobotAtLocation(rc.getLocation().add(dir)).getID());
+                    break;
+                }
+            }
         }
 
         if (influence_before_bid == -1){ //first bid
