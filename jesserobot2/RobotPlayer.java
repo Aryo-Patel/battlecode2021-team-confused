@@ -304,6 +304,27 @@ public strictfp class RobotPlayer{
 
         int mod8Turn = rc.getRoundNum() % 8;
         if (mod8Turn == 7 || mod8Turn == 0) {
+            RobotInfo[] nearbyRobots = rc.senseNearbyRobots();
+            int totalConviction = 0;
+            int totalEnemyRobots = 0;
+            int totalRobots = 1;
+            for (RobotInfo robot : nearbyRobots) {
+                if (robot.getTeam() == rc.getTeam().opponent()) {
+                    totalConviction += robot.getConviction();
+                    totalEnemyRobots++;
+                }
+                totalRobots++;
+            }
+            if (totalConviction != 0) {
+                for (int i = 0; i < 8; i++) {
+                    Direction dir = directions[(((rc.getRoundNum() - 1)/2%8) + i)%8];
+                    if (rc.canBuildRobot(RobotType.POLITICIAN, dir, GameConstants.EMPOWER_TAX + totalConviction*totalRobots/totalEnemyRobots)) {
+                        rc.buildRobot(RobotType.POLITICIAN, dir, GameConstants.EMPOWER_TAX + totalConviction*totalRobots/totalEnemyRobots);
+                        spawnedRobots.add(rc.senseRobotAtLocation(rc.getLocation().add(dir)).getID());
+                        break;
+                    }
+                }
+            }
             if (neutralECs.size() > 0) {
                 int minConviction = 32;
                 MapLocation minLocation = null;
@@ -462,7 +483,7 @@ public strictfp class RobotPlayer{
                     dealableDamage += damageDone;
                 }
             }
-            if (rc.canEmpower(actionRadius) && ((dealableDamage > 0.7*rc.getConviction()) || (killableUnits > 5)) {
+            if (rc.canEmpower(actionRadius) && ((dealableDamage > 0.7*rc.getConviction()) || (killableUnits > 5))) {
                 rc.empower(actionRadius);
             }
         }
