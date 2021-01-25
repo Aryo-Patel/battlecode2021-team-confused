@@ -466,7 +466,7 @@ public strictfp class RobotPlayer{
                 if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() != rc.getTeam()) {
                     if (shortestDistance(rc.getLocation(), robot.getLocation()) > 1) {
                         if (tryMoveInDirection(rc.getLocation().directionTo(robot.getLocation()))) {
-
+                            break;
                         } else {
                             if (rc.canEmpower(actionRadius)) {
                                 rc.empower(actionRadius);
