@@ -1,26 +1,29 @@
 package jesserobot2;
+
 import battlecode.common.*;
+import scala.Int;
+
 import java.util.*;
 import java.lang.Math;
 
-public strictfp class RobotPlayer {
+public strictfp class RobotPlayer{
     static RobotController rc;
 
     static final RobotType[] spawnableRobot = {
-        RobotType.POLITICIAN,
-        RobotType.SLANDERER,
-        RobotType.MUCKRAKER,
+            RobotType.POLITICIAN,
+            RobotType.SLANDERER,
+            RobotType.MUCKRAKER,
     };
 
     static final Direction[] directions = {
-        Direction.NORTH,
-        Direction.NORTHEAST,
-        Direction.EAST,
-        Direction.SOUTHEAST,
-        Direction.SOUTH,
-        Direction.SOUTHWEST,
-        Direction.WEST,
-        Direction.NORTHWEST,
+            Direction.NORTH,
+            Direction.NORTHEAST,
+            Direction.EAST,
+            Direction.SOUTHEAST,
+            Direction.SOUTH,
+            Direction.SOUTHWEST,
+            Direction.WEST,
+            Direction.NORTHWEST,
     };
 
     static int turnCount;
@@ -55,7 +58,7 @@ public strictfp class RobotPlayer {
 
     static int lastECFlag = 0;
 
-    static String type = null;
+    static String type;
 
     static Direction standardDirection;
 
@@ -63,6 +66,8 @@ public strictfp class RobotPlayer {
 
     static HashMap<MapLocation, Integer> enemyECs = new HashMap<MapLocation, Integer>();
     static HashMap<MapLocation, Integer> neutralECs = new HashMap<MapLocation, Integer>();
+
+    static ArrayList<Boolean> bidsWon = new ArrayList<>();
 
     static int log2(int N) {
         return (int) (Math.log(N) / Math.log(2));
@@ -111,30 +116,54 @@ public strictfp class RobotPlayer {
         return Math.min(offsetX, offsetY);
     }
 
+    static double passThreshold = 0.3; // anything lower is considered an obstacle
+    static Direction bugDir = null;
+    static double prevDistToTarget = Integer.MAX_VALUE, currentDistToTarget = -1;
+
+    static boolean tryBugPath(MapLocation target) throws GameActionException{
+        /*
+         * LH bug:
+         * travel in straight line to target, go around obstacle if we're back on line,
+         * then check if we're closer to obstacle than we were before hitting obstacle
+         * if yes, continue along line, if no continue along obstacle
+         * TODO: if close to target (det threshold), run more efficient pathing alg
+         */
+        Direction dir = rc.getLocation().directionTo(target);
+        currentDistToTarget = rc.getLocation().distanceSquaredTo(target); // set every bug move
+        if (rc.canMove(dir) && (rc.sensePassability(rc.getLocation().add(dir))) >= passThreshold
+            && currentDistToTarget <= prevDistToTarget){
+            rc.move(dir);
+            bugDir = null;
+        }
+        else{ // blocked, move along left side of obstacle
+            if (bugDir == null)
+                bugDir = dir.rotateLeft();
+            for (int i = 0; i < 8; ++i) {
+                if (rc.canMove(bugDir) && rc.sensePassability(rc.getLocation().add(bugDir)) >= passThreshold) {
+                    rc.move(bugDir);
+                    bugDir = bugDir.rotateLeft();
+                    break;
+                }
+                bugDir = bugDir.rotateRight();
+            }
+        }
+        prevDistToTarget = currentDistToTarget;
+        return true;
+    }
+
+
     static boolean tryMoveInDirection(Direction dir) throws GameActionException {
         MapLocation center = rc.getLocation();
 
         double MinTurns = Double.POSITIVE_INFINITY;
         Direction bestDirection = null;
 
-        if (rc.canMove(dir)) {
-            if ( 1.0/rc.sensePassability(center.add(dir)) < MinTurns ) {
-                MinTurns = Math.floor(1.0/rc.sensePassability(center.add(dir)));
-                bestDirection = dir;
-            }
-        }
-
-        if (rc.canMove(dir.rotateLeft())) {
-            if ( 1.0/rc.sensePassability(center.add(dir.rotateLeft())) < MinTurns ) {
-                MinTurns = Math.floor(1.0/rc.sensePassability(center.add(dir.rotateLeft())));
-                bestDirection = dir.rotateLeft();
-            }
-        }
-
-        if (rc.canMove(dir.rotateRight())) {
-            if ( 1.0/rc.sensePassability(center.add(dir.rotateRight())) < MinTurns ) {
-                MinTurns = Math.floor(1.0/rc.sensePassability(center.add(dir.rotateRight())));
-                bestDirection = dir.rotateRight();
+        for (Direction d: new Direction[]{dir, dir.rotateLeft(), dir.rotateRight()}){
+            if (rc.canMove(d)){
+                if ( 1.0/rc.sensePassability(center.add(d)) < MinTurns ) {
+                    MinTurns = Math.floor(1.0/rc.sensePassability(center.add(d)));
+                    bestDirection = d;
+                }
             }
         }
 
@@ -157,21 +186,21 @@ public strictfp class RobotPlayer {
 
     static boolean tryStandardMove() throws GameActionException {
         MapLocation center = rc.getLocation();
-        if (rc.canSenseLocation(center.add(standardDirection))) {
+        if (rc.canSenseLocation(center.add(standardDirection)))
             standardDirection = standardDirection;
-        } else if (rc.canSenseLocation(center.add(standardDirection.rotateRight().rotateRight()))) {
+        else if (rc.canSenseLocation(center.add(standardDirection.rotateRight().rotateRight())))
             standardDirection = standardDirection.rotateRight().rotateRight();
-        } else if (rc.canSenseLocation(center.add(standardDirection.rotateLeft().rotateLeft()))) {
+        else if (rc.canSenseLocation(center.add(standardDirection.rotateLeft().rotateLeft())))
             standardDirection = standardDirection.rotateLeft().rotateLeft();
-        } else if (rc.canSenseLocation(center.add(standardDirection.opposite().rotateLeft()))) {
+        else if (rc.canSenseLocation(center.add(standardDirection.opposite().rotateLeft())))
             standardDirection = standardDirection.opposite().rotateLeft();
-        }
 
         if (tryMoveInDirection(standardDirection)) {
             return true;
         } else {
             return false;
         }
+
     }
 
     static boolean isOnTeam(RobotInfo robot) throws GameActionException {
@@ -221,11 +250,20 @@ public strictfp class RobotPlayer {
         }
     }
 
+    static int influence_before_bid = -1, bidAmount = -1;
     static void runEnlightenmentCenter() throws GameActionException {
         System.out.println(rc.getRoundNum());
+        int current_influence = rc.getInfluence();
+        if (current_influence != -1){ // we have already made a bid
+            if (current_influence == influence_before_bid - bidAmount) // we won previous bid
+                bidAmount *= 1.1; // idk this is probably too high
+            else if (current_influence == influence_before_bid - (bidAmount/2)) // highest EC bidder but lost bid
+                bidAmount *= 0.9; //idk this is arbitrary, 10% decrease
+        }
+
         RobotType[] spawnOrder = {RobotType.SLANDERER, RobotType.MUCKRAKER, RobotType.MUCKRAKER, RobotType.POLITICIAN};
         RobotType toBuild = spawnOrder[((rc.getRoundNum() - 1)/2) % 4];
-        int[] spawnInfluence = {rc.getInfluence()/24, rc.getInfluence()/36, rc.getInfluence()/24, rc.getInfluence()/8};
+        int[] spawnInfluence = {rc.getInfluence()/12, rc.getInfluence()/24, rc.getInfluence()/24, rc.getInfluence()/8};
         int influence = spawnInfluence[((rc.getRoundNum() - 1)/2) % 4];
         for (int i = 0; i < 8; i++) {
             Direction dir = directions[(((rc.getRoundNum() - 1)/2%8) + i)%8];
@@ -235,6 +273,8 @@ public strictfp class RobotPlayer {
                 break;
             }
         }
+
+        // updates hash maps of ECs based on displayed flags
         for (int robot : spawnedRobots) {
             if (rc.canGetFlag(robot)) {
                 if (rc.getFlag(robot) / 128 / 128 / 32 == ownEC) {
@@ -263,7 +303,6 @@ public strictfp class RobotPlayer {
         }
 
         int mod8Turn = rc.getRoundNum() % 8;
-
         if (mod8Turn == 7 || mod8Turn == 0) {
             if (neutralECs.size() > 0) {
                 int minConviction = 32;
@@ -304,7 +343,10 @@ public strictfp class RobotPlayer {
             sendLocation(teamID, enlightenmentCenterID, rc.getLocation());
         }
 
-        int bidAmount = (int) Math.floor(rc.getInfluence()/48);
+        if (influence_before_bid == -1){ //first bid
+            influence_before_bid = rc.getInfluence();
+            bidAmount = rc.getInfluence()/48;
+        }
         if (rc.canBid(bidAmount)) {
             rc.bid(bidAmount);
         }
@@ -328,21 +370,22 @@ public strictfp class RobotPlayer {
 
         int mod8Turn = rc.getRoundNum() % 8;
 
-        if (mod8Turn == 7 || mod8Turn == 0) {
+        if (mod8Turn == 7 || mod8Turn == 0) { // find neutral ECs (if any)
             if (rc.canGetFlag(ecID)) {
                 lastECFlag = rc.getFlag(ecID);
             }
         }
 
+        // empower enemy/neutral EC if any, otherwise empower enemy units
         if (affectable.length != 0 && rc.canEmpower(actionRadius)) {
-            int damageDone = (int) Math.floor((rc.getConviction() - GameConstants.EMPOWER_TAX) / affectable.length);
+            int damageDone = (int) (Math.floor(rc.getConviction() - GameConstants.EMPOWER_TAX) / affectable.length);
             int killableUnits = 0;
             for (RobotInfo robot : affectable) {
                 if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() != rc.getTeam()) {
                     rc.empower(actionRadius);
                     break;
                 } else if (robot.getTeam() != rc.getTeam() && robot.getConviction() < damageDone) {
-                        killableUnits++;
+                    killableUnits++;
                 }
             }
             if (rc.canEmpower(actionRadius) && (killableUnits > 0)) {
@@ -352,11 +395,13 @@ public strictfp class RobotPlayer {
 
         if (lastECFlag / 128 / 128 / 32 == neutralEC) {
             tryMoveInDirection(rc.getLocation().directionTo(decodeLocation(lastECFlag)));
+            //tryBugPath(decodeLocation(lastECFlag));
         }
         for (RobotInfo robot : nearbyRobots) {
             if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == Team.NEUTRAL) {
                 sendLocation(neutralEC, log2(robot.getConviction()), robot.getLocation());
                 tryMoveInDirection(rc.getLocation().directionTo(robot.getLocation()));
+                //tryBugPath(decodeLocation(lastECFlag));
                 break;
             } else if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == enemy) {
                 sendLocation(enemyEC, log2(robot.getConviction()), robot.getLocation());
@@ -373,7 +418,7 @@ public strictfp class RobotPlayer {
     static void runSlanderer() throws GameActionException {
         Team enemy = rc.getTeam().opponent();
         RobotInfo[] nearbyRobots = rc.senseNearbyRobots();
-        if (ecID == 0) {
+        if (ecID == 0) { // finds nearby friendly EC + gets ID
             for (RobotInfo robot : nearbyRobots) {
                 if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
                     ecID = robot.getID();
@@ -426,6 +471,7 @@ public strictfp class RobotPlayer {
     }
 
     static void runMuckraker() throws GameActionException {
+        System.out.println(rc.getRoundNum());
         Team enemy = rc.getTeam().opponent();
         RobotInfo[] nearbyRobots = rc.senseNearbyRobots();
         if (ecID == 0) {
@@ -433,10 +479,10 @@ public strictfp class RobotPlayer {
                 if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
                     ecID = robot.getID();
                     standardDirection = rc.getLocation().directionTo(robot.getLocation()).opposite();
-                    if (rc.getRoundNum() % 8 == 4) {
-                        type = "muckraker-random";
-                    }
                 }
+            }
+            if (rc.getRoundNum() % 8 == 4) {
+                type = "muckraker-north";
             }
         }
 
@@ -460,62 +506,36 @@ public strictfp class RobotPlayer {
             }
         }
 
-        System.out.println(lastECFlag);
-
-        if (type == "muckraker-random") {
-            tryMove(randomDirection());
-        }
-
-        if (lastECFlag / 128 / 128 / 32 == enemyEC) {
-            tryMoveInDirection(rc.getLocation().directionTo(decodeLocation(lastECFlag)));
-        }
-        for (RobotInfo robot : nearbyRobots) {
-            if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == enemy) {
-                sendLocation(enemyEC, log2(robot.getConviction()), robot.getLocation());
-                tryMoveInDirection(rc.getLocation().directionTo(robot.getLocation()));
-                break;
-            } else if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == Team.NEUTRAL) {
-                sendLocation(neutralEC, log2(robot.getConviction()), robot.getLocation());
-                break;
-            } else if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == rc.getTeam()) {
-                sendLocation(ownEC, log2(robot.getConviction()), robot.getLocation());
-                break;
+        if (type == "muckraker-north") {
+            if (rc.canMove(Direction.NORTH)) {
+                rc.move(Direction.NORTH);
             }
-            sendLocation(teamID, politicianID, rc.getLocation());
+        } else {
+            if (lastECFlag / 128 / 128 / 32 == enemyEC) {
+                tryMoveInDirection(rc.getLocation().directionTo(decodeLocation(lastECFlag)));
+                //tryBugPath(decodeLocation(lastECFlag));
+            }
+            for (RobotInfo robot : nearbyRobots) {
+                if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == enemy) {
+                    sendLocation(enemyEC, log2(robot.getConviction()), robot.getLocation());
+                    tryMoveInDirection(rc.getLocation().directionTo(robot.getLocation()));
+                    //tryBugPath(decodeLocation(lastECFlag));
+                    break;
+                } else if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == Team.NEUTRAL) {
+                    sendLocation(neutralEC, log2(robot.getConviction()), robot.getLocation());
+                    break;
+                } else if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == rc.getTeam()) {
+                    sendLocation(ownEC, log2(robot.getConviction()), robot.getLocation());
+                    break;
+                }
+                sendLocation(teamID, muckrakerID, rc.getLocation());
+            }
+            tryStandardMove();
         }
-        tryStandardMove();
     }
 
-    /**
-     * Returns a random Direction.
-     *
-     * @return a random Direction
-     */
     static Direction randomDirection() {
         return directions[(int) (Math.random() * directions.length)];
     }
 
-    /**
-     * Returns a random spawnable RobotType
-     *
-     * @return a random RobotType
-     */
-    static RobotType randomSpawnableRobotType() {
-        return spawnableRobot[(int) (Math.random() * spawnableRobot.length)];
-    }
-
-    /**
-     * Attempts to move in a given direction.
-     *
-     * @param dir The intended direction of movement
-     * @return true if a move was performed
-     * @throws GameActionException
-     */
-    static boolean tryMove(Direction dir) throws GameActionException {
-        System.out.println("I am trying to move " + dir + "; " + rc.isReady() + " " + rc.getCooldownTurns() + " " + rc.canMove(dir));
-        if (rc.canMove(dir)) {
-            rc.move(dir);
-            return true;
-        } else return false;
-    }
 }
