@@ -349,8 +349,8 @@ public strictfp class RobotPlayer{
             }
             for (int i = 0; i < 8; i++) {
                 Direction dir = directions[(((rc.getRoundNum() - 1)/2%8) + i)%8];
-                if (rc.canBuildRobot(RobotType.MUCKRAKER, dir, rc.getInfluence()/36)) {
-                    rc.buildRobot(RobotType.MUCKRAKER, dir, rc.getInfluence()/36);
+                if (rc.canBuildRobot(RobotType.MUCKRAKER, dir, 3)) {
+                    rc.buildRobot(RobotType.MUCKRAKER, dir, 3);
                     spawnedRobots.add(rc.senseRobotAtLocation(rc.getLocation().add(dir)).getID());
                     break;
                 }
