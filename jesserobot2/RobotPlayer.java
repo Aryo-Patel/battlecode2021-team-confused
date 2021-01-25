@@ -552,25 +552,28 @@ public strictfp class RobotPlayer{
         }
 
         if (type == "muckraker-stupid") {
-            RobotInfo awayFrom = null;
-            int nearestDistance = 10;
-
-            for (RobotInfo robot : nearbyRobots) {
-                if ((robot.getType() == RobotType.MUCKRAKER || robot.getType() == RobotType.POLITICIAN) && robot.getTeam() == rc.getTeam()) {
-                    if (shortestDistance(rc.getLocation(), robot.getLocation()) < nearestDistance) {
-                        nearestDistance = shortestDistance(rc.getLocation(), robot.getLocation());
-                        awayFrom = robot;
-                    }
-                }
-            }
-
-            if (awayFrom != null) {
-                standardDirection = rc.getLocation().directionTo(awayFrom.getLocation()).opposite();
-            }
-
             if (tryStandardMove()) {
-                System.out.println("I moved!");
+                standardDirection = standardDirection.rotateRight().rotateRight();
             }
+            // RobotInfo awayFrom = null;
+            // int nearestDistance = 10;
+
+            // for (RobotInfo robot : nearbyRobots) {
+            //     if ((robot.getType() == RobotType.MUCKRAKER || robot.getType() == RobotType.POLITICIAN) && robot.getTeam() == rc.getTeam()) {
+            //         if (shortestDistance(rc.getLocation(), robot.getLocation()) < nearestDistance) {
+            //             nearestDistance = shortestDistance(rc.getLocation(), robot.getLocation());
+            //             awayFrom = robot;
+            //         }
+            //     }
+            // }
+
+            // if (awayFrom != null) {
+            //     standardDirection = rc.getLocation().directionTo(awayFrom.getLocation()).opposite();
+            // }
+
+            // if (tryStandardMove()) {
+            //     System.out.println("I moved!");
+            // }
         } else {
             if (lastECFlag / 128 / 128 / 32 == enemyEC) {
                 tryMoveInDirection(rc.getLocation().directionTo(decodeLocation(lastECFlag)));
