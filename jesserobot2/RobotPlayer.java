@@ -443,7 +443,19 @@ public strictfp class RobotPlayer{
             int killableUnits = 0;
             for (RobotInfo robot : affectable) {
                 if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() != rc.getTeam()) {
-                    rc.empower(actionRadius);
+                    if (shortestDistance(rc.getLocation(), robot.getLocation()) > 1) {
+                        if (tryMoveInDirection(rc.getLocation().directionTo(robot.getLocation()))) {
+
+                        } else {
+                            if (rc.canEmpower(actionRadius)) {
+                                rc.empower(actionRadius);
+                            }
+                        }
+                    } else {
+                        if (rc.canEmpower(actionRadius)) {
+                            rc.empower(actionRadius);
+                        }
+                    }
                     break;
                 } else if (robot.getTeam() != rc.getTeam() && robot.getConviction() < damageDone) {
                     killableUnits++;
