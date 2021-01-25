@@ -466,8 +466,9 @@ public strictfp class RobotPlayer{
             standardDirection = rc.getLocation().directionTo(nearestEnemyMuckraker.getLocation()).opposite();
         }
 
-        if (tryStandardMove())
+        if (tryStandardMove()) {
             System.out.println("I moved!");
+        }
     }
 
     static void runMuckraker() throws GameActionException {
@@ -482,7 +483,7 @@ public strictfp class RobotPlayer{
                 }
             }
             if (rc.getRoundNum() % 8 == 4) {
-                type = "muckraker-north";
+                type = "muckraker-stupid";
             }
         }
 
@@ -506,9 +507,25 @@ public strictfp class RobotPlayer{
             }
         }
 
-        if (type == "muckraker-north") {
-            if (rc.canMove(Direction.NORTH)) {
-                rc.move(Direction.NORTH);
+        if (type == "muckraker-stupid") {
+            RobotInfo awayFrom = null;
+            int nearestDistance = 10;
+
+            for (RobotInfo robot : nearbyRobots) {
+                if ((robot.getType() == RobotType.MUCKRAKER || robot.getType() == RobotType.POLITICIAN) && robot.getTeam() == rc.getTeam()) {
+                    if (shortestDistance(rc.getLocation(), robot.getLocation()) < nearestDistance) {
+                        nearestDistance = shortestDistance(rc.getLocation(), robot.getLocation());
+                        awayFrom = robot;
+                    }
+                }
+            }
+
+            if (awayFrom != null) {
+                standardDirection = rc.getLocation().directionTo(awayFrom.getLocation()).opposite();
+            }
+
+            if (tryStandardMove()) {
+                System.out.println("I moved!");
             }
         } else {
             if (lastECFlag / 128 / 128 / 32 == enemyEC) {
