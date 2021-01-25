@@ -462,6 +462,7 @@ public strictfp class RobotPlayer{
         for (RobotInfo robot : nearbyRobots) {
             if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == Team.NEUTRAL) {
                 sendLocation(neutralEC, log2(robot.getConviction()), robot.getLocation());
+                tryMoveInDirection(rc.getLocation().directionTo(robot.getLocation().opposite()));
                 break;
             } else if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == enemy) {
                 sendLocation(enemyEC, log2(robot.getConviction()), robot.getLocation());
@@ -528,6 +529,22 @@ public strictfp class RobotPlayer{
                     rc.expose(robot.location);
                     return;
                 }
+            }
+        }
+
+        for (RobotInfo robot : nearbyRobots) {
+            if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == Team.NEUTRAL) {
+                sendLocation(neutralEC, log2(robot.getConviction()), robot.getLocation());
+                tryMoveInDirection(rc.getLocation().directionTo(robot.getLocation().opposite()));
+                break;
+            } else if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == enemy) {
+                sendLocation(enemyEC, log2(robot.getConviction()), robot.getLocation());
+                break;
+            } else if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == rc.getTeam()) {
+                sendLocation(ownEC, log2(robot.getConviction()), robot.getLocation());
+                break;
+            } else {
+                sendLocation(teamID, slandererID, rc.getLocation());
             }
         }
 
