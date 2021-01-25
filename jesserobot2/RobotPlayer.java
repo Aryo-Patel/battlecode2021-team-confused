@@ -462,7 +462,7 @@ public strictfp class RobotPlayer{
                     dealableDamage += damageDone;
                 }
             }
-            if (rc.canEmpower(actionRadius) && (dealableDamage > 0.7*rc.getConviction())) {
+            if (rc.canEmpower(actionRadius) && ((dealableDamage > 0.7*rc.getConviction()) || (killableUnits > 5)) {
                 rc.empower(actionRadius);
             }
         }
