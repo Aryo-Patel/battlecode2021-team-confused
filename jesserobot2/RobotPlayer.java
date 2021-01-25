@@ -327,6 +327,31 @@ public strictfp class RobotPlayer{
                     sendLocation(teamID, enlightenmentCenterID, rc.getLocation());
                 }
             } else {
+                if (enemyECs.size() > 0) {
+                    int minConviction = 32;
+                    MapLocation minLocation = null;
+                    for (MapLocation ec : enemyECs.keySet()) {
+                        if (enemyECs.get(ec) < minConviction) {
+                            minConviction = enemyECs.get(ec);
+                            minLocation = ec;
+                        }
+                    }
+                    if (minLocation != null) {
+                        sendLocation(enemyEC, minConviction, minLocation);
+                        for (int i = 0; i < 8; i++) {
+                            Direction dir = directions[(((rc.getRoundNum() - 1)/2%8) + i)%8];
+                            if (rc.canBuildRobot(RobotType.POLITICIAN, dir, rc.getInfluence()/4)) {
+                                rc.buildRobot(RobotType.POLITICIAN, dir, rc.getInfluence()/4);
+                                spawnedRobots.add(rc.senseRobotAtLocation(rc.getLocation().add(dir)).getID());
+                                break;
+                            }
+                        }
+                    } else {
+                        sendLocation(teamID, enlightenmentCenterID, rc.getLocation());
+                    }
+                } else {
+                    sendLocation(teamID, enlightenmentCenterID, rc.getLocation());
+                }
                 sendLocation(teamID, enlightenmentCenterID, rc.getLocation());
             }
         } else if (mod8Turn == 3 || mod8Turn == 4 || mod8Turn == 5 || mod8Turn == 6) {
