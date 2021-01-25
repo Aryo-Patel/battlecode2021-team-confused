@@ -515,19 +515,35 @@ public strictfp class RobotPlayer{
         }
 
         RobotInfo nearestEnemyMuckraker = null;
+        RobotInfo nearestEnemy = null;
+        int nearestMuckrakerDistance = 10;
         int nearestDistance = 10;
 
         for (RobotInfo robot : nearbyRobots) {
-            if (robot.getType() == RobotType.MUCKRAKER && robot.getTeam() == enemy) {
-                if (shortestDistance(rc.getLocation(), robot.getLocation()) < nearestDistance) {
-                    nearestDistance = shortestDistance(rc.getLocation(), robot.getLocation());
-                    nearestEnemyMuckraker = robot;
+            if (robot.getTeam() == enemy) {
+                if (robot.getType() == RobotType.MUCKRAKER) {
+                    if (shortestDistance(rc.getLocation(), robot.getLocation()) < nearestDistance) {
+                        nearestDistance = shortestDistance(rc.getLocation(), robot.getLocation());
+                        nearestMuckrakerDistance = shortestDistance(rc.getLocation(), robot.getLocation());
+                        nearestEnemy = robot;
+                        nearestEnemyMuckraker = robot;
+                    } else if (shortestDistance(rc.getLocation(), robot.getLocation()) < nearestMuckrakerDistance) {
+                        nearestMuckrakerDistance = shortestDistance(rc.getLocation(), robot.getLocation());
+                        nearestEnemyMuckraker = robot;
+                    }
+                } else {
+                    if (shortestDistance(rc.getLocation(), robot.getLocation()) < nearestDistance) {
+                        nearestDistance = shortestDistance(rc.getLocation(), robot.getLocation());
+                        nearestEnemy = robot;
+                    }
                 }
             }
         }
 
         if (nearestEnemyMuckraker != null) {
             standardDirection = rc.getLocation().directionTo(nearestEnemyMuckraker.getLocation()).opposite();
+        } else if (nearestEnemy != null) {
+            standardDirection = rc.getLocation().directionTo(nearestEnemy.getLocation()).opposite();
         }
 
         if (tryStandardMove()) {
