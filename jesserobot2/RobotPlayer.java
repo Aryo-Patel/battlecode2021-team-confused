@@ -382,12 +382,23 @@ public strictfp class RobotPlayer{
             }
         } else if (mod8Turn == 1 || mod8Turn == 2) {
             sendLocation(teamID, enlightenmentCenterID, rc.getLocation());
-            for (int i = 0; i < 8; i++) {
-                Direction dir = directions[(((rc.getRoundNum() - 1)/2%8) + i)%8];
-                if (rc.canBuildRobot(RobotType.SLANDERER, dir, rc.getInfluence()/24)) {
-                    rc.buildRobot(RobotType.SLANDERER, dir, rc.getInfluence()/24);
-                    spawnedRobots.add(rc.senseRobotAtLocation(rc.getLocation().add(dir)).getID());
-                    break;
+            if (neutralECs.size() == 0) {
+                for (int i = 0; i < 8; i++) {
+                    Direction dir = directions[(((rc.getRoundNum() - 1)/2%8) + i)%8];
+                    if (rc.canBuildRobot(RobotType.SLANDERER, dir, rc.getInfluence()/8)) {
+                        rc.buildRobot(RobotType.SLANDERER, dir, rc.getInfluence()/8);
+                        spawnedRobots.add(rc.senseRobotAtLocation(rc.getLocation().add(dir)).getID());
+                        break;
+                    }
+                }
+            } else {
+                for (int i = 0; i < 8; i++) {
+                    Direction dir = directions[(((rc.getRoundNum() - 1)/2%8) + i)%8];
+                    if (rc.canBuildRobot(RobotType.SLANDERER, dir, rc.getInfluence()/24)) {
+                        rc.buildRobot(RobotType.SLANDERER, dir, rc.getInfluence()/24);
+                        spawnedRobots.add(rc.senseRobotAtLocation(rc.getLocation().add(dir)).getID());
+                        break;
+                    }
                 }
             }
         }
